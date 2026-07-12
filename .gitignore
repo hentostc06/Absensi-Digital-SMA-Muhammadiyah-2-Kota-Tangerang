@@ -13,3 +13,7 @@
 /database/backups/*.sql
 *.zip
 *.tar.gz
+
+**/caddy
+frankenphp
+frankenphp-worker.php
