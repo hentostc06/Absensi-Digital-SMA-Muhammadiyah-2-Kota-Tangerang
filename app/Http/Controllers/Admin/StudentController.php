@@ -12,20 +12,39 @@ use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
 {
+
     public function index(Request $request)
     {
+        $search = trim((string) $request->input('q', ''));
+        $selectedClass = $request->input('class_id');
+
+        $classes = SchoolClass::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         $items = Student::with(['user', 'schoolClass'])
-            ->when($request->q, function ($query, $keyword) {
-                $query->where('nis', 'like', "%{$keyword}%")
-                    ->orWhereHas('user', function ($userQuery) use ($keyword) {
-                        $userQuery->where('name', 'like', "%{$keyword}%")
-                            ->orWhere('username', 'like', "%{$keyword}%");
-                    });
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($studentQuery) use ($search) {
+                    $studentQuery->where('nis', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('username', 'like', "%{$search}%");
+                        });
+                });
             })
+            ->when(filled($selectedClass), function ($query) use ($selectedClass) {
+                $query->where('school_class_id', $selectedClass);
+            })
+            ->orderBy('nis')
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.students.index', compact('items'));
+        return view('admin.students.index', compact(
+            'items',
+            'classes',
+            'selectedClass',
+            'search'
+        ));
     }
 
     public function create()

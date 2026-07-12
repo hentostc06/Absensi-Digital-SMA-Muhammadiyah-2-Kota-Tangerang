@@ -14,21 +14,52 @@
 </section>
 
 <section class="admin-search-card">
-    <form method="GET" action="{{ route('admin.students.index') }}" class="admin-search-form">
+    <form method="GET" action="{{ route('admin.students.index') }}" class="admin-search-form admin-student-filter-form">
         <label class="admin-search-field">
             <span>Pencarian siswa</span>
             <div class="admin-search-input">
                 <b>NIS</b>
-                <input name="q" value="{{ request('q') }}" placeholder="Cari NIS atau nama siswa...">
+                <input name="q" value="{{ $search ?? request('q') }}" placeholder="Cari NIS atau nama siswa...">
             </div>
         </label>
 
-        <button class="admin-search-submit" type="submit">Cari Data</button>
+        <label class="admin-search-field admin-class-filter-field">
+            <span>Filter kelas</span>
+            <div class="admin-search-input admin-select-input">
+                <b>Kelas</b>
+                <select name="class_id">
+                    <option value="">Semua kelas</option>
+                    @foreach ($classes as $class)
+                        <option value="{{ $class->id }}" @selected((string) ($selectedClass ?? request('class_id')) === (string) $class->id)>
+                            {{ $class->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </label>
 
-        @if (request('q'))
+        <button class="admin-search-submit" type="submit">Terapkan</button>
+
+        @if (request('q') || request('class_id'))
             <a class="admin-search-reset" href="{{ route('admin.students.index') }}">Reset</a>
         @endif
     </form>
+
+    @if (request('q') || request('class_id'))
+        <div class="admin-active-filter">
+            <span>Filter aktif:</span>
+
+            @if (request('q'))
+                <b>Pencarian: {{ request('q') }}</b>
+            @endif
+
+            @if (request('class_id'))
+                <b>Kelas: {{ $classes->firstWhere('id', (int) request('class_id'))?->name ?? 'Kelas dipilih' }}</b>
+            @endif
+
+            <small>{{ $items->total() }} siswa ditemukan</small>
+        </div>
+    @endif
 </section>
 
 <section class="card table-wrap admin-table-card">
@@ -47,11 +78,11 @@
         @forelse ($items as $x)
             <tr>
                 <td><strong>{{ $x->nis }}</strong></td>
-                <td>{{ $x->user->name }}</td>
-                <td>{{ $x->schoolClass->name }}</td>
+                <td>{{ $x->user->name ?? '-' }}</td>
+                <td>{{ $x->schoolClass->name ?? '-' }}</td>
                 <td>
-                    <span class="badge {{ $x->user->is_active ? 'green' : 'red' }}">
-                        {{ $x->user->is_active ? 'Aktif' : 'Terkunci' }}
+                    <span class="badge {{ ($x->user->is_active ?? false) ? 'green' : 'red' }}">
+                        {{ ($x->user->is_active ?? false) ? 'Aktif' : 'Terkunci' }}
                     </span>
                 </td>
                 <td class="actions">
@@ -66,7 +97,13 @@
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="empty">Belum ada data siswa.</td>
+                <td colspan="5" class="empty">
+                    @if (request('q') || request('class_id'))
+                        Tidak ada siswa yang sesuai dengan filter.
+                    @else
+                        Belum ada data siswa.
+                    @endif
+                </td>
             </tr>
         @endforelse
         </tbody>

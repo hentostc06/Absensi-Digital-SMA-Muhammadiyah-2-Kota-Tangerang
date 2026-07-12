@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MyScheduleController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ScheduleController;
@@ -121,3 +122,22 @@ Route::middleware(['auth'])->group(function () {
         ->name('account.settings.password');
 });
 
+
+
+// BADCODING_MY_SCHEDULE_ROUTES_START
+Route::middleware(['web', 'auth', 'role:guru'])
+    ->prefix('guru')
+    ->name('teacher.')
+    ->group(function () {
+        Route::get('/jadwal-saya', [MyScheduleController::class, 'teacher'])
+            ->name('schedule');
+    });
+
+Route::middleware(['web', 'auth', 'role:siswa'])
+    ->prefix('siswa')
+    ->name('student.')
+    ->group(function () {
+        Route::get('/jadwal-saya', [MyScheduleController::class, 'student'])
+            ->name('schedule');
+    });
+// BADCODING_MY_SCHEDULE_ROUTES_END

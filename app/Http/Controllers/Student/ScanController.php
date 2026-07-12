@@ -3,149 +3,458 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\Attendance;
-use App\Models\AttendanceSession;
-use App\Services\DynamicQrService;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class ScanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $student = request()->user()->student;
+        $student = $this->studentForUser($request->user());
+        $recentAttendances = collect();
+
+        if ($student && Schema::hasTable('attendances')) {
+            $timeColumn = Schema::hasColumn('attendances', 'scanned_at') ? 'scanned_at' : 'created_at';
+
+            $recentAttendances = DB::table('attendances')
+                ->where('student_id', $student->id)
+                ->orderByDesc($timeColumn)
+                ->limit(10)
+                ->get()
+                ->map(function ($attendance) {
+                    $sessionId = $attendance->attendance_session_id
+                        ?? $attendance->session_id
+                        ?? null;
+
+                    $session = $sessionId && Schema::hasTable('attendance_sessions')
+                        ? DB::table('attendance_sessions')->where('id', $sessionId)->first()
+                        : null;
+
+                    if (! $session) {
+                        $session = (object) [
+                            'id' => $sessionId,
+                            'subject_id' => null,
+                        ];
+                    }
+
+                    $subjectName = $this->subjectName($session);
+
+                    $session->subject = (object) [
+                        'name' => $subjectName,
+                    ];
+
+                    $attendance->session = $session;
+                    $attendance->subject = $session->subject;
+                    $attendance->subject_name = $subjectName;
+
+                    return $attendance;
+                });
+        }
 
         return view('student.scan', [
-            'recent' => $student
-                ? $student->attendances()->with('session.subject')->latest('scanned_at')->limit(5)->get()
-                : collect(),
+            'student' => $student,
+            'recent' => $recentAttendances,
+            'recentAttendances' => $recentAttendances,
+            'attendances' => $recentAttendances,
+            'history' => $recentAttendances,
         ]);
     }
 
-    public function store(Request $request, DynamicQrService $qrService)
+    public function store(Request $request)
     {
-        $data = $request->validate([
-            'token' => ['required', 'string', 'max:2000'],
+        $request->validate([
+            'token' => ['required', 'string'],
         ]);
 
-        $student = $request->user()->student;
+        $student = $this->studentForUser($request->user());
 
         if (! $student) {
-            return $this->fail('Akun ini belum terhubung ke data siswa.', 422);
+            return response()->json([
+                'ok' => false,
+                'message' => 'Data siswa tidak ditemukan pada akun ini.',
+            ], 422);
         }
 
-        $payload = $this->readPayload($data['token']);
+        $token = $this->normalizeToken((string) $request->input('token'));
+        $payload = $this->payloadFromToken($token);
+        $sessionId = $payload['sid']
+            ?? $payload['session_id']
+            ?? $payload['attendance_session_id']
+            ?? null;
 
-        if (! $payload) {
-            return $this->fail('QR Code tidak valid. Pastikan yang discan adalah QR absensi dari guru.', 422);
+        if (! $sessionId) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'QR Code tidak valid. Silakan scan QR terbaru dari guru.',
+            ], 422);
         }
 
-        $session = AttendanceSession::with(['schoolClass', 'subject'])->find((int) ($payload['sid'] ?? 0));
+        if (! $this->tokenNotExpired($payload)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'QR Code sudah kedaluwarsa. Silakan scan QR terbaru.',
+            ], 422);
+        }
+
+        $session = DB::table('attendance_sessions')->where('id', (int) $sessionId)->first();
 
         if (! $session) {
-            return $this->fail('Sesi absensi tidak ditemukan.', 404);
+            return response()->json([
+                'ok' => false,
+                'message' => 'Sesi absensi tidak ditemukan.',
+            ], 404);
         }
 
-        if (! $session->isOpen()) {
-            return $this->fail('Sesi absensi sudah ditutup.', 422);
+        if (! $this->sessionIsOpen($session)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Sesi absensi sudah berakhir.',
+            ], 422);
         }
 
-        if ((int) $student->school_class_id !== (int) $session->school_class_id) {
-            return $this->fail(
-                'QR ini untuk kelas '.$session->schoolClass->name.', sedangkan akun Anda bukan kelas tersebut.',
-                403
-            );
+        if (! $this->studentAllowedForSession($student, $session)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'QR Code ini bukan untuk kelas Anda.',
+            ], 403);
         }
 
-        if (! $qrService->validate($data['token'], $session)) {
-            return $this->fail('QR Code sudah kedaluwarsa. Scan ulang QR terbaru yang tampil di layar guru.', 422);
-        }
+        $subjectName = $this->subjectName($session);
+        $now = now();
+        $timeLabel = $now->format('H:i');
+        $status = $this->attendanceStatus($session, $now);
 
-        try {
-            $result = DB::transaction(function () use ($session, $student, $request) {
-                $existing = Attendance::where('attendance_session_id', $session->id)
-                    ->where('student_id', $student->id)
-                    ->lockForUpdate()
-                    ->first();
+        $sessionColumn = Schema::hasColumn('attendances', 'attendance_session_id')
+            ? 'attendance_session_id'
+            : 'session_id';
 
-                if ($existing) {
-                    return [
-                        'duplicate' => true,
-                        'attendance' => $existing,
-                    ];
-                }
+        $existing = DB::table('attendances')
+            ->where('student_id', $student->id)
+            ->where($sessionColumn, $session->id)
+            ->first();
 
-                $status = now()->greaterThan($session->opened_at->copy()->addMinutes($session->late_after_minutes))
-                    ? 'terlambat'
-                    : 'hadir';
+        if ($existing) {
+            $existingTime = $this->attendanceTimeLabel($existing);
 
-                $attendance = Attendance::create([
-                    'attendance_session_id' => $session->id,
-                    'student_id' => $student->id,
-                    'status' => $status,
-                    'scanned_at' => now(),
-                    'source' => 'qr',
-                    'ip_address' => $request->ip(),
-                    'user_agent' => substr((string) $request->userAgent(), 0, 500),
-                ]);
-
-                return [
-                    'duplicate' => false,
-                    'attendance' => $attendance,
-                ];
-            });
-        } catch (QueryException) {
-            return $this->fail('Anda sudah melakukan absensi pada sesi ini.', 409);
-        }
-
-        if ($result['duplicate']) {
             return response()->json([
                 'ok' => true,
                 'duplicate' => true,
-                'message' => 'Anda sudah melakukan absensi pada sesi ini.',
-                'status' => $result['attendance']->status,
-                'subject' => $session->subject->name,
-                'time' => optional($result['attendance']->scanned_at)->format('H:i:s'),
+                'subject' => $subjectName,
+                'time' => $existingTime,
+                'status' => $existing->status ?? 'hadir',
+                'message' => "Anda sudah absen pada pelajaran {$subjectName} pada {$existingTime}.",
             ]);
         }
+
+        $insert = [
+            'student_id' => $student->id,
+            $sessionColumn => $session->id,
+        ];
+
+        if (Schema::hasColumn('attendances', 'status')) {
+            $insert['status'] = $status;
+        }
+
+        if (Schema::hasColumn('attendances', 'scanned_at')) {
+            $insert['scanned_at'] = $now;
+        }
+
+        if (Schema::hasColumn('attendances', 'created_at')) {
+            $insert['created_at'] = $now;
+        }
+
+        if (Schema::hasColumn('attendances', 'updated_at')) {
+            $insert['updated_at'] = $now;
+        }
+
+        DB::table('attendances')->insert($insert);
 
         return response()->json([
             'ok' => true,
             'duplicate' => false,
-            'message' => 'Absensi berhasil dicatat.',
-            'status' => $result['attendance']->status,
-            'subject' => $session->subject->name,
-            'time' => $result['attendance']->scanned_at->format('H:i:s'),
+            'subject' => $subjectName,
+            'time' => $timeLabel,
+            'status' => $status,
+            'message' => "Berhasil absen pada pelajaran {$subjectName} pada {$timeLabel}.",
         ]);
     }
 
-    private function readPayload(string $token): ?array
+    private function studentForUser($user): ?object
     {
-        $parts = explode('.', trim($token));
-
-        if (count($parts) !== 2) {
+        if (! $user || ! Schema::hasTable('students')) {
             return null;
         }
 
-        $encoded = $parts[0];
-        $pad = str_repeat('=', (4 - strlen($encoded) % 4) % 4);
-        $json = base64_decode(strtr($encoded.$pad, '-_', '+/'), true);
+        try {
+            if (method_exists($user, 'student')) {
+                $student = $user->student()->first();
 
-        if (! $json) {
-            return null;
+                if ($student) {
+                    return $student;
+                }
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
         }
 
-        $payload = json_decode($json, true);
+        if (Schema::hasColumn('students', 'user_id')) {
+            $student = DB::table('students')->where('user_id', $user->id)->first();
 
-        return is_array($payload) ? $payload : null;
+            if ($student) {
+                return $student;
+            }
+        }
+
+        $username = (string) ($user->username ?? '');
+
+        foreach (['nis', 'username', 'student_number'] as $column) {
+            if ($username !== '' && Schema::hasColumn('students', $column)) {
+                $student = DB::table('students')->where($column, $username)->first();
+
+                if ($student) {
+                    return $student;
+                }
+            }
+        }
+
+        return null;
     }
 
-    private function fail(string $message, int $status = 422)
+    private function normalizeToken(string $token): string
     {
-        return response()->json([
-            'ok' => false,
-            'message' => $message,
-        ], $status);
+        $token = trim($token);
+
+        if (str_contains($token, 'token=')) {
+            $query = parse_url($token, PHP_URL_QUERY);
+            parse_str((string) $query, $params);
+
+            if (! empty($params['token'])) {
+                return trim((string) $params['token']);
+            }
+        }
+
+        return $token;
+    }
+
+    private function payloadFromToken(string $token): array
+    {
+        $firstPart = explode('.', $token)[0] ?? '';
+        $payload = $this->base64UrlDecode($firstPart);
+
+        if (! $payload) {
+            return [];
+        }
+
+        $json = json_decode($payload, true);
+
+        return is_array($json) ? $json : [];
+    }
+
+    private function base64UrlDecode(string $value): ?string
+    {
+        $value = strtr($value, '-_', '+/');
+        $padding = strlen($value) % 4;
+
+        if ($padding) {
+            $value .= str_repeat('=', 4 - $padding);
+        }
+
+        $decoded = base64_decode($value, true);
+
+        return $decoded === false ? null : $decoded;
+    }
+
+    private function tokenNotExpired(array $payload): bool
+    {
+        $expires = $payload['exp']
+            ?? $payload['expires_at']
+            ?? $payload['expired_at']
+            ?? null;
+
+        if (! $expires) {
+            return true;
+        }
+
+        try {
+            if (is_numeric($expires)) {
+                return now()->timestamp <= (int) $expires;
+            }
+
+            return now()->lte(Carbon::parse($expires));
+        } catch (\Throwable $exception) {
+            return true;
+        }
+    }
+
+
+    private function sessionIsOpen(object $session): bool
+    {
+        if (isset($session->status)) {
+            $status = strtolower((string) $session->status);
+
+            if (in_array($status, ['closed', 'close', 'selesai', 'ditutup', 'inactive'], true)) {
+                return false;
+            }
+        }
+
+        if (isset($session->closed_at) && filled($session->closed_at)) {
+            return false;
+        }
+
+        $durationMinutes = (int) ($session->session_duration_minutes ?? 15);
+
+        if ($durationMinutes <= 0) {
+            $durationMinutes = 15;
+        }
+
+        $openedRaw = $session->opened_at
+            ?? $session->started_at
+            ?? $session->start_time
+            ?? $session->created_at
+            ?? null;
+
+        if ($openedRaw) {
+            try {
+                $expiredAt = \Illuminate\Support\Carbon::parse($openedRaw)->addMinutes($durationMinutes);
+
+                if (now()->greaterThan($expiredAt)) {
+                    $updates = [];
+
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('attendance_sessions', 'closed_at')) {
+                        $updates['closed_at'] = now();
+                    }
+
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('attendance_sessions', 'status')) {
+                        $updates['status'] = 'closed';
+                    }
+
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('attendance_sessions', 'token_version')) {
+                        $currentVersion = (int) ($session->token_version ?? 0);
+                        $updates['token_version'] = $currentVersion + 1;
+                    }
+
+                    if ($updates && isset($session->id)) {
+                        \Illuminate\Support\Facades\DB::table('attendance_sessions')
+                            ->where('id', $session->id)
+                            ->update($updates);
+                    }
+
+                    return false;
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        return true;
+    }
+
+    private function studentAllowedForSession(object $student, object $session): bool
+    {
+        $studentClassId = $student->school_class_id
+            ?? $student->class_id
+            ?? null;
+
+        $sessionClassId = $session->school_class_id
+            ?? $session->class_id
+            ?? null;
+
+        if (! $studentClassId || ! $sessionClassId) {
+            return true;
+        }
+
+        return (int) $studentClassId === (int) $sessionClassId;
+    }
+
+    private function subjectName(object $session): string
+    {
+        foreach (['subject_name', 'lesson_name', 'mapel'] as $column) {
+            if (isset($session->{$column}) && filled($session->{$column})) {
+                return (string) $session->{$column};
+            }
+        }
+
+        if (isset($session->subject_id) && Schema::hasTable('subjects')) {
+            $name = DB::table('subjects')->where('id', $session->subject_id)->value('name');
+
+            if ($name) {
+                return (string) $name;
+            }
+        }
+
+        if (isset($session->schedule_id)) {
+            foreach (['schedules', 'class_schedules'] as $table) {
+                if (! Schema::hasTable($table)) {
+                    continue;
+                }
+
+                $schedule = DB::table($table)->where('id', $session->schedule_id)->first();
+
+                if (! $schedule) {
+                    continue;
+                }
+
+                if (isset($schedule->subject_id) && Schema::hasTable('subjects')) {
+                    $name = DB::table('subjects')->where('id', $schedule->subject_id)->value('name');
+
+                    if ($name) {
+                        return (string) $name;
+                    }
+                }
+
+                foreach (['subject_name', 'lesson_name', 'mapel'] as $column) {
+                    if (isset($schedule->{$column}) && filled($schedule->{$column})) {
+                        return (string) $schedule->{$column};
+                    }
+                }
+            }
+        }
+
+        return 'Mata Pelajaran';
+    }
+
+    private function attendanceStatus(object $session, Carbon $now): string
+    {
+        $lateAfter = (int) ($session->late_after_minutes ?? 0);
+
+        if ($lateAfter <= 0) {
+            return 'hadir';
+        }
+
+        $startRaw = $session->started_at
+            ?? $session->start_time
+            ?? $session->opened_at
+            ?? $session->created_at
+            ?? null;
+
+        if (! $startRaw) {
+            return 'hadir';
+        }
+
+        try {
+            $start = Carbon::parse($startRaw);
+
+            return $now->gt($start->copy()->addMinutes($lateAfter))
+                ? 'terlambat'
+                : 'hadir';
+        } catch (\Throwable $exception) {
+            return 'hadir';
+        }
+    }
+
+    private function attendanceTimeLabel(object $attendance): string
+    {
+        $raw = $attendance->scanned_at
+            ?? $attendance->created_at
+            ?? now();
+
+        try {
+            return Carbon::parse($raw)->format('H:i');
+        } catch (\Throwable $exception) {
+            return now()->format('H:i');
+        }
     }
 }

@@ -5337,3 +5337,1394 @@ a[href*="schedules"] > span:first-child::before {
         display: block !important;
     }
 }
+
+/* === FIX STUDENT HISTORY TEXT DEMPET STYLE === */
+.student-history-status {
+    display: inline-block !important;
+    margin-left: 7px !important;
+    color: #334155 !important;
+    font-weight: 800 !important;
+}
+
+.student-history-status::after {
+    content: "" !important;
+    margin-right: 4px !important;
+}
+
+/* Rapihkan teks riwayat di dashboard siswa */
+.dashboard-card strong,
+.content-card strong,
+.student-dashboard strong {
+    margin-right: 4px !important;
+    line-height: 1.45 !important;
+}
+
+.dashboard-card,
+.content-card {
+    line-height: 1.55 !important;
+}
+
+.dashboard-card .student-history-status,
+.content-card .student-history-status {
+    white-space: nowrap !important;
+}
+
+@media (max-width: 900px) {
+    .student-history-status {
+        display: inline !important;
+        margin-left: 6px !important;
+    }
+}
+
+/* === FORCE RIWAYAT TEXT SPACE PATCH === */
+
+/*
+  Fix teks nempel:
+  InformatikaHadir  -> Informatika Hadir
+  Bahasa InggrisHadir -> Bahasa Inggris Hadir
+*/
+main strong::after {
+    content: " " !important;
+    white-space: pre !important;
+}
+
+/* Biar khusus list riwayat makin rapi */
+main strong {
+    display: inline !important;
+    margin-right: 0 !important;
+}
+
+main strong + span,
+main strong + small {
+    margin-left: 4px !important;
+}
+
+/* Card riwayat terbaru */
+main .rounded-xl,
+main .rounded-2xl,
+main .rounded-3xl {
+    line-height: 1.55 !important;
+}
+
+/* Item riwayat: avatar + teks */
+main .rounded-xl > div,
+main .rounded-2xl > div,
+main .rounded-3xl > div {
+    line-height: 1.55 !important;
+}
+
+/* === SCAN SUCCESS POPUP STYLE PATCH === */
+.bc-scan-success-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: none;
+    place-items: center;
+    padding: 18px;
+}
+
+.bc-scan-success-modal.is-open {
+    display: grid;
+}
+
+.bc-scan-success-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 36, 85, .68);
+    backdrop-filter: blur(8px);
+}
+
+.bc-scan-success-dialog {
+    position: relative;
+    width: min(410px, 100%);
+    padding: 30px 26px 24px;
+    border: 1px solid rgba(255, 255, 255, .42);
+    border-radius: 26px;
+    background: linear-gradient(135deg, #ffffff, #f8fbff);
+    box-shadow: 0 34px 90px rgba(0, 0, 0, .34);
+    text-align: center;
+}
+
+.bc-scan-success-icon {
+    width: 68px;
+    height: 68px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 16px;
+    border-radius: 999px;
+    color: #082455;
+    background: #f6c344;
+    font-size: 34px;
+    font-weight: 900;
+    box-shadow: 0 16px 35px rgba(246, 195, 68, .35);
+}
+
+.bc-scan-success-dialog h2 {
+    margin: 0 0 10px;
+    color: #082455;
+    font-size: 26px;
+    line-height: 1.2;
+    font-weight: 900;
+}
+
+.bc-scan-success-dialog p {
+    margin: 0;
+    color: #334155;
+    font-size: 15px;
+    line-height: 1.65;
+    font-weight: 700;
+}
+
+.bc-scan-success-dialog button {
+    width: 100%;
+    min-height: 50px;
+    margin-top: 22px;
+    border: 1px solid #f6c344;
+    border-radius: 15px;
+    color: #082455;
+    background: #f6c344;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 900;
+    box-shadow: 0 14px 28px rgba(246, 195, 68, .24);
+}
+
+.bc-scan-success-dialog button:hover {
+    filter: brightness(.98);
+}
+
+#scan-feedback[data-type="success"] {
+    color: #067647 !important;
+}
+
+#scan-feedback[data-type="error"] {
+    color: #b42318 !important;
+}
+
+#scan-feedback[data-type="info"] {
+    color: #123d78 !important;
+}
+
+/* === STUDENT SCAN PAGE TIME PATCH === */
+.student-scan-page {
+    display: grid !important;
+    gap: 20px !important;
+}
+
+.scan-page-heading {
+    margin-bottom: 0 !important;
+}
+
+.scan-layout-grid {
+    display: grid !important;
+    grid-template-columns: minmax(360px, .9fr) minmax(420px, 1.1fr) !important;
+    gap: 22px !important;
+    align-items: start !important;
+}
+
+.scan-card {
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 22px !important;
+    background: #ffffff !important;
+    box-shadow: 0 18px 50px rgba(8, 36, 85, .08) !important;
+    padding: 24px !important;
+}
+
+.scan-card-head {
+    margin-bottom: 14px !important;
+}
+
+.scan-card-head h2 {
+    margin: 0 0 4px !important;
+    color: #082455 !important;
+    font-size: 18px !important;
+    font-weight: 900 !important;
+}
+
+.scan-card-head p {
+    margin: 0 !important;
+    color: #64748b !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+.qr-reader-box {
+    min-height: 360px !important;
+    display: grid !important;
+    place-items: center !important;
+    border: 2px dashed #b7cbe4 !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    background: #f8fbff !important;
+}
+
+.reader-placeholder {
+    color: #64748b !important;
+    font-weight: 700 !important;
+}
+
+.scan-feedback {
+    margin-top: 14px !important;
+    padding: 14px 16px !important;
+    border-radius: 16px !important;
+    border: 1px solid #dbe5f1 !important;
+    background: #f8fbff !important;
+    color: #123d78 !important;
+    font-size: 14px !important;
+    line-height: 1.55 !important;
+    font-weight: 700 !important;
+}
+
+.scan-history-list {
+    display: grid !important;
+    gap: 12px !important;
+}
+
+.scan-history-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    min-height: 76px !important;
+    padding: 14px 16px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+}
+
+.scan-history-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 999px !important;
+    color: #082455 !important;
+    background: #f6c344 !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+}
+
+.scan-history-content {
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 4px !important;
+}
+
+.scan-history-content strong {
+    color: #082455 !important;
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+    font-weight: 900 !important;
+}
+
+.scan-history-content strong::after {
+    content: "" !important;
+}
+
+.scan-history-content span {
+    color: #334155 !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    font-weight: 700 !important;
+}
+
+.manual-token-box {
+    margin-top: 14px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+}
+
+.manual-token-box summary {
+    cursor: pointer !important;
+    padding: 14px 16px !important;
+    color: #082455 !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+}
+
+.manual-token-form {
+    display: grid !important;
+    gap: 10px !important;
+    padding: 0 16px 16px !important;
+}
+
+.manual-token-form textarea {
+    width: 100% !important;
+    padding: 12px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 12px !important;
+    resize: vertical !important;
+}
+
+.manual-token-form button {
+    min-height: 44px !important;
+    border: 1px solid #f6c344 !important;
+    border-radius: 12px !important;
+    background: #f6c344 !important;
+    color: #082455 !important;
+    font-weight: 900 !important;
+}
+
+@media (max-width: 1100px) {
+    .scan-layout-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .scan-card {
+        padding: 18px !important;
+        border-radius: 18px !important;
+    }
+
+    .qr-reader-box {
+        min-height: 300px !important;
+    }
+
+    .scan-history-item {
+        align-items: flex-start !important;
+    }
+}
+
+
+/* === REAL FINAL QR TEACHER PROJECTOR CLEAN === */
+
+/* Timer asli bawah QR: fix angka tetap di tengah */
+.qr-footer-panel {
+    display: grid !important;
+    grid-template-columns: 104px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 20px !important;
+    padding: 22px 26px !important;
+    border-top: 1px solid #dbe5f1 !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%) !important;
+}
+
+.qr-footer-panel .countdown-ring {
+    position: relative !important;
+    width: 92px !important;
+    height: 92px !important;
+    min-width: 92px !important;
+    min-height: 92px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 999px !important;
+    background: conic-gradient(#f6c344 var(--progress, 360deg), #e8eef7 0) !important;
+    overflow: hidden !important;
+}
+
+.qr-footer-panel .countdown-ring strong,
+#countdown {
+    position: static !important;
+    inset: auto !important;
+    width: 68px !important;
+    height: 68px !important;
+    min-width: 68px !important;
+    min-height: 68px !important;
+    display: grid !important;
+    place-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    border-radius: 999px !important;
+    color: #082455 !important;
+    background: #ffffff !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+}
+
+/* Tombol mode proyektor */
+.qr-projector-open {
+    min-height: 40px !important;
+    padding: 0 16px !important;
+    border: 1px solid #f6c344 !important;
+    border-radius: 12px !important;
+    color: #082455 !important;
+    background: #f6c344 !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    box-shadow: 0 12px 24px rgba(246, 195, 68, .22) !important;
+}
+
+.qr-card-head.projector-ready {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+}
+
+.qr-card-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+}
+
+/* Modal projector benar-benar scoped */
+.qr-projector-modal[hidden] {
+    display: none !important;
+}
+
+.qr-projector-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 999999 !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 24px !important;
+    background: rgba(4, 18, 44, .72) !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+.qr-projector-dialog {
+    position: relative !important;
+    width: min(1160px, 96vw) !important;
+    max-height: 94vh !important;
+    overflow: hidden !important;
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    border-radius: 30px !important;
+    background: linear-gradient(135deg, #082455 0%, #123d78 100%) !important;
+    box-shadow: 0 36px 100px rgba(0, 0, 0, .38) !important;
+}
+
+.qr-projector-close {
+    position: absolute !important;
+    top: 18px !important;
+    right: 18px !important;
+    z-index: 3 !important;
+    width: 46px !important;
+    height: 46px !important;
+    border: 1px solid rgba(255,255,255,.22) !important;
+    border-radius: 999px !important;
+    color: #ffffff !important;
+    background: rgba(255,255,255,.14) !important;
+    cursor: pointer !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+}
+
+.qr-projector-header {
+    padding: 28px 36px 14px !important;
+    display: grid !important;
+    gap: 16px !important;
+    justify-items: center !important;
+    color: #ffffff !important;
+    text-align: center !important;
+}
+
+.qr-projector-brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 18px !important;
+}
+
+.qr-projector-brand img {
+    width: 96px !important;
+    height: 96px !important;
+    padding: 10px !important;
+    object-fit: contain !important;
+    border-radius: 24px !important;
+    background: #ffffff !important;
+    box-shadow: 0 18px 38px rgba(0,0,0,.18) !important;
+}
+
+.qr-projector-brand h2 {
+    margin: 0 !important;
+    color: #ffffff !important;
+    font-size: 38px !important;
+    line-height: 1.1 !important;
+    font-weight: 900 !important;
+    text-align: left !important;
+}
+
+.qr-projector-brand p {
+    margin: 7px 0 0 !important;
+    color: rgba(255,255,255,.86) !important;
+    font-size: 18px !important;
+    line-height: 1.35 !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+}
+
+.qr-projector-meta {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 10px !important;
+}
+
+.qr-projector-meta span {
+    padding: 10px 16px !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    border-radius: 999px !important;
+    color: #ffffff !important;
+    background: rgba(255,255,255,.13) !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+}
+
+.qr-projector-body {
+    display: grid !important;
+    place-items: center !important;
+    padding: 10px 36px 20px !important;
+}
+
+.qr-projector-box {
+    width: min(620px, 68vh, 84vw) !important;
+    height: min(620px, 68vh, 84vw) !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 30px !important;
+    border-radius: 34px !important;
+    background: #ffffff !important;
+    box-shadow: 0 26px 70px rgba(0,0,0,.24) !important;
+    overflow: hidden !important;
+}
+
+.qr-projector-box img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
+.qr-projector-footer {
+    padding: 0 36px 30px !important;
+    display: grid !important;
+    grid-template-columns: 112px minmax(0, 1fr) !important;
+    gap: 22px !important;
+    align-items: center !important;
+    color: #ffffff !important;
+}
+
+.qr-projector-countdown {
+    position: relative !important;
+    width: 104px !important;
+    height: 104px !important;
+    min-width: 104px !important;
+    min-height: 104px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 999px !important;
+    background:
+        radial-gradient(circle closest-side, #123d78 70%, transparent 72%),
+        conic-gradient(#f6c344 var(--projector-progress, 360deg), rgba(255,255,255,.22) 0) !important;
+}
+
+.qr-projector-countdown strong {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    color: #ffffff !important;
+    background: transparent !important;
+    font-size: 40px !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+}
+
+.qr-projector-footer h3 {
+    margin: 0 0 8px !important;
+    color: #ffffff !important;
+    font-size: 28px !important;
+    line-height: 1.2 !important;
+    font-weight: 900 !important;
+}
+
+.qr-projector-footer p {
+    margin: 0 !important;
+    color: rgba(255,255,255,.84) !important;
+    font-size: 16px !important;
+    line-height: 1.55 !important;
+    font-weight: 700 !important;
+}
+
+.qr-projector-footer small {
+    display: block !important;
+    margin-top: 10px !important;
+    color: rgba(255,255,255,.92) !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    font-weight: 800 !important;
+}
+
+@media (max-width: 760px) {
+    .qr-card-head.projector-ready {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .qr-projector-dialog {
+        border-radius: 24px !important;
+    }
+
+    .qr-projector-brand {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .qr-projector-brand h2,
+    .qr-projector-brand p {
+        text-align: center !important;
+    }
+
+    .qr-projector-brand h2 {
+        font-size: 25px !important;
+    }
+
+    .qr-projector-brand p {
+        font-size: 14px !important;
+    }
+
+    .qr-projector-box {
+        width: min(430px, 82vw) !important;
+        height: min(430px, 82vw) !important;
+        padding: 18px !important;
+        border-radius: 24px !important;
+    }
+
+    .qr-projector-footer {
+        grid-template-columns: 1fr !important;
+        justify-items: center !important;
+        text-align: center !important;
+        padding: 0 20px 24px !important;
+    }
+}
+
+/* === PROJECTOR NO FOOTER TEXT FINAL === */
+
+/* Hilangkan teks bawah projector agar tidak nutup QR */
+.qr-projector-footer h3,
+.qr-projector-footer p,
+.qr-projector-footer small,
+.bc-projector-foot h3,
+.bc-projector-foot p,
+.bc-projector-foot small,
+.qr-projector-footer > div:not(.qr-projector-countdown),
+.bc-projector-foot > div:not(.bc-projector-count) {
+    display: none !important;
+}
+
+/* Footer projector cuma berisi timer kecil di kiri bawah */
+.qr-projector-footer {
+    position: absolute !important;
+    left: 30px !important;
+    bottom: 24px !important;
+    z-index: 4 !important;
+    display: block !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    pointer-events: none !important;
+}
+
+.bc-projector-foot {
+    position: absolute !important;
+    left: 30px !important;
+    bottom: 24px !important;
+    z-index: 4 !important;
+    display: block !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    pointer-events: none !important;
+}
+
+/* Timer kecil, tidak ganggu QR */
+.qr-projector-countdown,
+.bc-projector-count {
+    width: 86px !important;
+    height: 86px !important;
+    min-width: 86px !important;
+    min-height: 86px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 999px !important;
+    background:
+        radial-gradient(circle closest-side, #123d78 68%, transparent 70%),
+        conic-gradient(#f6c344 var(--projector-progress, 360deg), rgba(255,255,255,.22) 0) !important;
+}
+
+.qr-projector-countdown strong,
+.bc-projector-count span {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    display: block !important;
+    color: #ffffff !important;
+    background: transparent !important;
+    font-size: 30px !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+}
+
+/* QR diberi ruang dan tidak ketabrak footer */
+.qr-projector-dialog,
+.bc-projector-dialog {
+    position: relative !important;
+}
+
+.qr-projector-body,
+.bc-projector-body {
+    padding-bottom: 34px !important;
+}
+
+.qr-projector-box,
+.bc-projector-qr {
+    width: min(600px, 66vh, 82vw) !important;
+    height: min(600px, 66vh, 82vw) !important;
+}
+
+/* Pastikan QR sendiri tidak ketimpa teks */
+.qr-projector-box img,
+.bc-projector-qr img,
+.qr-projector-box canvas,
+.bc-projector-qr canvas,
+.qr-projector-box svg,
+.bc-projector-qr svg {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* === FIX SCAN CAMERA TOOLBAR BUTTON BOX FINAL === */
+
+/* Bar tombol kamera halaman siswa */
+.scanner-toolbar,
+.scan-camera-toolbar,
+.camera-toolbar,
+.scan-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(220px, 1fr) repeat(3, auto) !important;
+    gap: 10px !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 0 10px !important;
+    padding: 12px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 18px !important;
+    background: #ffffff !important;
+    box-shadow: 0 14px 34px rgba(8, 36, 85, .06) !important;
+}
+
+/* Select kamera */
+.scanner-toolbar select,
+.scan-camera-toolbar select,
+.camera-toolbar select,
+.scan-toolbar select,
+#camera-device {
+    width: 100% !important;
+    min-height: 44px !important;
+    padding: 0 14px !important;
+    border: 1px solid #cfdced !important;
+    border-radius: 13px !important;
+    color: #082455 !important;
+    background: #ffffff !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Tombol kamera: jangan tampil seperti teks */
+.scanner-toolbar button,
+.scan-camera-toolbar button,
+.camera-toolbar button,
+.scan-toolbar button,
+#camera-start,
+#camera-switch,
+#camera-stop {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    min-height: 44px !important;
+    padding: 0 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #cfdced !important;
+    border-radius: 13px !important;
+    color: #082455 !important;
+    background: #ffffff !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    box-shadow: 0 10px 22px rgba(8, 36, 85, .08) !important;
+}
+
+/* Tombol utama aktifkan kamera */
+#camera-start {
+    border-color: #f6c344 !important;
+    background: #f6c344 !important;
+    color: #082455 !important;
+}
+
+/* Tombol ganti kamera */
+#camera-switch {
+    border-color: #d7e3f2 !important;
+    background: #f8fbff !important;
+    color: #082455 !important;
+}
+
+/* Tombol stop */
+#camera-stop {
+    border-color: #fecaca !important;
+    background: #fff5f5 !important;
+    color: #b42318 !important;
+}
+
+/* Hover biar terasa tombol */
+#camera-start:hover,
+#camera-switch:hover,
+#camera-stop:hover,
+.scanner-toolbar button:hover,
+.scan-camera-toolbar button:hover,
+.camera-toolbar button:hover,
+.scan-toolbar button:hover {
+    transform: translateY(-1px) !important;
+    filter: brightness(.98) !important;
+}
+
+/* Area kamera tetap rapi */
+#reader {
+    margin-top: 10px !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+}
+
+/* Mobile: tombol turun jadi kotak full */
+@media (max-width: 760px) {
+    .scanner-toolbar,
+    .scan-camera-toolbar,
+    .camera-toolbar,
+    .scan-toolbar {
+        grid-template-columns: 1fr !important;
+        padding: 12px !important;
+    }
+
+    .scanner-toolbar button,
+    .scan-camera-toolbar button,
+    .camera-toolbar button,
+    .scan-toolbar button,
+    #camera-start,
+    #camera-switch,
+    #camera-stop {
+        width: 100% !important;
+    }
+}
+
+/* === STUDENT SCAN INTRO CARD FINAL === */
+
+.scan-intro-card {
+    width: 100% !important;
+    margin: 0 0 22px !important;
+    padding: 22px 24px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 22px !important;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,.96) 0%, rgba(248,251,255,.96) 100%) !important;
+    box-shadow: 0 18px 44px rgba(8, 36, 85, .07) !important;
+}
+
+.scan-intro-card .section-kicker {
+    display: block !important;
+    margin-bottom: 8px !important;
+    color: #082455 !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    font-weight: 900 !important;
+    letter-spacing: .22em !important;
+}
+
+.scan-intro-card h1,
+.scan-intro-card h2,
+.scan-intro-card h3 {
+    margin: 0 0 8px !important;
+    color: #082455 !important;
+    font-size: clamp(22px, 2vw, 30px) !important;
+    line-height: 1.15 !important;
+    font-weight: 900 !important;
+}
+
+.scan-intro-card p {
+    max-width: 920px !important;
+    margin: 0 !important;
+    color: #53657f !important;
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+    font-weight: 600 !important;
+}
+
+@media (max-width: 760px) {
+    .scan-intro-card {
+        margin-bottom: 16px !important;
+        padding: 18px !important;
+        border-radius: 18px !important;
+    }
+
+    .scan-intro-card p {
+        font-size: 14px !important;
+        line-height: 1.6 !important;
+    }
+}
+
+/* === JADWAL SAYA GURU SISWA FINAL === */
+
+/* icon jadwal di sidebar */
+a[href*="jadwal-saya"] > span:first-child::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 8H6v10h12V10ZM8 12h3v3H8v-3Zm5 0h3v3h-3v-3Z'/%3E%3C/svg%3E") !important;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 8H6v10h12V10ZM8 12h3v3H8v-3Zm5 0h3v3h-3v-3Z'/%3E%3C/svg%3E") !important;
+}
+
+.my-schedule-hero {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 18px !important;
+    margin-bottom: 22px !important;
+    padding: 24px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 24px !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%) !important;
+    box-shadow: 0 18px 44px rgba(8, 36, 85, .07) !important;
+}
+
+.my-schedule-hero h1 {
+    margin: 6px 0 8px !important;
+    color: #082455 !important;
+    font-size: clamp(26px, 3vw, 38px) !important;
+    line-height: 1.12 !important;
+    font-weight: 950 !important;
+}
+
+.my-schedule-hero p {
+    max-width: 720px !important;
+    margin: 0 !important;
+    color: #53657f !important;
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+    font-weight: 650 !important;
+}
+
+.my-schedule-summary,
+.my-schedule-class-card {
+    min-width: 150px !important;
+    padding: 16px 18px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 20px !important;
+    background: #ffffff !important;
+    text-align: center !important;
+    box-shadow: 0 12px 30px rgba(8, 36, 85, .06) !important;
+}
+
+.my-schedule-summary strong,
+.my-schedule-class-card strong {
+    display: block !important;
+    color: #082455 !important;
+    font-size: 30px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+}
+
+.my-schedule-summary span,
+.my-schedule-class-card span {
+    display: block !important;
+    margin-bottom: 6px !important;
+    color: #53657f !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+}
+
+.my-schedule-class-card {
+    width: fit-content !important;
+    min-width: 240px !important;
+    margin-bottom: 20px !important;
+    text-align: left !important;
+}
+
+.my-schedule-class-card strong {
+    font-size: 24px !important;
+}
+
+.my-schedule-empty {
+    padding: 26px !important;
+    border: 1px dashed #cfdced !important;
+    border-radius: 22px !important;
+    color: #53657f !important;
+    background: #ffffff !important;
+    box-shadow: 0 16px 40px rgba(8, 36, 85, .06) !important;
+}
+
+.my-schedule-empty strong {
+    display: block !important;
+    margin-bottom: 8px !important;
+    color: #082455 !important;
+    font-size: 18px !important;
+    font-weight: 950 !important;
+}
+
+.my-schedule-empty p {
+    margin: 0 !important;
+    line-height: 1.7 !important;
+    font-weight: 650 !important;
+}
+
+.my-schedule-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+}
+
+.my-schedule-day-card {
+    overflow: hidden !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 24px !important;
+    background: #ffffff !important;
+    box-shadow: 0 18px 44px rgba(8, 36, 85, .07) !important;
+}
+
+.my-schedule-day-card.today {
+    border-color: #f6c344 !important;
+    box-shadow: 0 20px 52px rgba(246, 195, 68, .18) !important;
+}
+
+.my-schedule-day-card header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 18px 20px !important;
+    border-bottom: 1px solid #dbe5f1 !important;
+    background: #f8fbff !important;
+}
+
+.my-schedule-day-card.today header {
+    background: linear-gradient(135deg, #fff8df 0%, #ffffff 100%) !important;
+}
+
+.my-schedule-day-card header span {
+    display: block !important;
+    color: #53657f !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .12em !important;
+}
+
+.my-schedule-day-card header h2 {
+    margin: 5px 0 0 !important;
+    color: #082455 !important;
+    font-size: 24px !important;
+    line-height: 1.1 !important;
+    font-weight: 950 !important;
+}
+
+.my-schedule-day-card header b {
+    padding: 8px 11px !important;
+    border-radius: 999px !important;
+    color: #082455 !important;
+    background: #f6c344 !important;
+    font-size: 12px !important;
+    font-weight: 950 !important;
+}
+
+.my-schedule-items {
+    display: grid !important;
+    gap: 0 !important;
+}
+
+.my-schedule-item {
+    display: grid !important;
+    grid-template-columns: 76px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    padding: 16px 20px !important;
+    border-bottom: 1px solid #edf2f8 !important;
+}
+
+.my-schedule-item:last-child {
+    border-bottom: 0 !important;
+}
+
+.my-schedule-time {
+    display: grid !important;
+    place-items: center !important;
+    align-content: center !important;
+    min-height: 70px !important;
+    border-radius: 16px !important;
+    color: #082455 !important;
+    background: #eef5ff !important;
+}
+
+.my-schedule-time strong {
+    display: block !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+}
+
+.my-schedule-time span {
+    display: block !important;
+    margin-top: 5px !important;
+    color: #53657f !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+}
+
+.my-schedule-info {
+    min-width: 0 !important;
+}
+
+.my-schedule-info h3 {
+    margin: 0 0 5px !important;
+    color: #082455 !important;
+    font-size: 17px !important;
+    line-height: 1.25 !important;
+    font-weight: 950 !important;
+}
+
+.my-schedule-info p {
+    margin: 0 0 10px !important;
+    color: #53657f !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    font-weight: 750 !important;
+}
+
+.my-schedule-badges {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+}
+
+.my-schedule-badges span {
+    padding: 6px 9px !important;
+    border-radius: 999px !important;
+    color: #082455 !important;
+    background: #f8fbff !important;
+    border: 1px solid #dbe5f1 !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+}
+
+@media (max-width: 920px) {
+    .my-schedule-hero {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .my-schedule-summary {
+        width: 100% !important;
+        text-align: left !important;
+    }
+
+    .my-schedule-list {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .my-schedule-item {
+        grid-template-columns: 1fr !important;
+    }
+
+    .my-schedule-time {
+        width: 100% !important;
+        grid-template-columns: auto auto !important;
+        justify-content: start !important;
+        gap: 8px !important;
+        min-height: 52px !important;
+        padding: 0 14px !important;
+    }
+
+    .my-schedule-time span {
+        margin-top: 0 !important;
+    }
+}
+
+/* === ADMIN STUDENT CLASS FILTER FINAL === */
+
+.admin-student-filter-form {
+    display: grid !important;
+    grid-template-columns: minmax(240px, 1.2fr) minmax(220px, .9fr) auto auto !important;
+    align-items: end !important;
+    gap: 12px !important;
+}
+
+.admin-select-input select {
+    width: 100% !important;
+    min-width: 170px !important;
+    height: 44px !important;
+    border: 0 !important;
+    outline: none !important;
+    color: #082455 !important;
+    background: transparent !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+.admin-active-filter {
+    margin-top: 16px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 12px 14px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 16px !important;
+    background: #f8fbff !important;
+}
+
+.admin-active-filter span {
+    color: #53657f !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+}
+
+.admin-active-filter b {
+    padding: 7px 10px !important;
+    border-radius: 999px !important;
+    color: #082455 !important;
+    background: #ffffff !important;
+    border: 1px solid #dbe5f1 !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+}
+
+.admin-active-filter small {
+    margin-left: auto !important;
+    color: #53657f !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+@media (max-width: 980px) {
+    .admin-student-filter-form {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .admin-student-filter-form .admin-search-submit,
+    .admin-student-filter-form .admin-search-reset {
+        width: 100% !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-student-filter-form {
+        grid-template-columns: 1fr !important;
+    }
+
+    .admin-active-filter {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .admin-active-filter small {
+        margin-left: 0 !important;
+    }
+}
+
+/* === REPORT SHOW ALPA STUDENTS FINAL === */
+
+.report-summary-line {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin: 14px 0 16px !important;
+}
+
+.report-summary-line span {
+    padding: 9px 12px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 999px !important;
+    color: #53657f !important;
+    background: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    box-shadow: 0 10px 24px rgba(8,36,85,.05) !important;
+}
+
+.report-summary-line b {
+    color: #082455 !important;
+    font-weight: 950 !important;
+}
+
+.report-row-absent {
+    background: #fff7f7 !important;
+}
+
+.badge.red {
+    color: #b42318 !important;
+    background: #fee4e2 !important;
+}
+
+.badge.yellow {
+    color: #b54708 !important;
+    background: #fef0c7 !important;
+}
+
+.badge.blue {
+    color: #175cd3 !important;
+    background: #dbeafe !important;
+}
+
+.table-wrap td small {
+    display: block !important;
+    margin-top: 4px !important;
+    color: #667085 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+
+/* === REPORT MAPEL FILTER FINAL === */
+
+.report-filter-card.filters {
+    display: grid !important;
+    grid-template-columns: 170px 170px 170px 170px 160px auto auto auto !important;
+    gap: 12px !important;
+    align-items: end !important;
+}
+
+.report-filter-card label {
+    min-width: 0 !important;
+}
+
+.report-filter-card input,
+.report-filter-card select {
+    width: 100% !important;
+}
+
+@media (max-width: 1280px) {
+    .report-filter-card.filters {
+        grid-template-columns: repeat(4, minmax(160px, 1fr)) !important;
+    }
+
+    .report-filter-card .btn,
+    .report-filter-card button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 720px) {
+    .report-filter-card.filters {
+        grid-template-columns: 1fr !important;
+    }
+}

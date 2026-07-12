@@ -49,22 +49,33 @@
     </div>
 
     <div class="qr-summary-card">
-        <span>Batas Terlambat</span>
-        <strong>{{ $session->late_after_minutes }} menit</strong>
+        <span>Terlambat Setelah</span>
+        <strong>{{ $session->late_after_minutes ?? 5 }} menit</strong>
+    </div>
+
+    <div class="qr-summary-card">
+        <span>Sesi Berakhir</span>
+        <strong>{{ $session->session_duration_minutes ?? 15 }} menit</strong>
     </div>
 </section>
 
 <section class="qr-show-grid">
     <div class="qr-show-card qr-display-card">
-        <div class="qr-card-head">
+        <div class="qr-card-head projector-ready">
             <div>
                 <span class="section-kicker">QR CODE SISWA</span>
                 <h2>Pindai untuk Absensi</h2>
             </div>
 
-            <span id="qr-status" class="qr-status {{ $session->isOpen() ? 'online' : 'offline' }}">
-                {{ $session->isOpen() ? 'Aktif' : 'Ditutup' }}
-            </span>
+            <div class="qr-card-actions">
+                <button type="button" class="qr-projector-open" id="open-projector">
+                    Mode Proyektor
+                </button>
+
+                <span id="qr-status" class="qr-status {{ $session->isOpen() ? 'online' : 'offline' }}">
+                    {{ $session->isOpen() ? 'Aktif' : 'Ditutup' }}
+                </span>
+            </div>
         </div>
 
         <div class="qr-frame">
@@ -134,6 +145,39 @@
         </div>
     </div>
 </section>
+
+<div class="qr-projector-modal" id="projector-modal" hidden>
+    <div class="qr-projector-dialog">
+        <button type="button" class="qr-projector-close" id="close-projector" aria-label="Tutup">×</button>
+
+        <header class="qr-projector-header">
+            <div class="qr-projector-brand">
+                <img src="{{ asset('images/logo-sma-muhammadiyah-2.jpeg') }}" alt="Logo Sekolah">
+                <div>
+                    <h2>Sistem Absensi QR</h2>
+                    <p>SMA Muhammadiyah 2 Kota Tangerang</p>
+                </div>
+            </div>
+
+            <div class="qr-projector-meta">
+                <span>{{ $session->subject->name }}</span>
+                <span>{{ $session->schoolClass->name }}</span>
+                <span>Scan QR untuk absensi</span>
+            </div>
+        </header>
+
+        <main class="qr-projector-body">
+            <div class="qr-projector-box">
+                <img id="projector-qr-image" alt="QR Code Proyektor">
+            </div>
+        </main>
+
+        <footer class="qr-projector-footer">
+            <div class="qr-projector-countdown" id="projector-countdown-ring">
+                <strong id="projector-countdown">30</strong>
+            </div></footer>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -143,6 +187,69 @@ document.addEventListener('DOMContentLoaded', function () {
         tokenUrl: @json(route('teacher.sessions.token', $session)),
         attendanceUrl: @json(route('teacher.sessions.attendance', $session))
     });
+
+    const openButton = document.getElementById('open-projector');
+    const closeButton = document.getElementById('close-projector');
+    const modal = document.getElementById('projector-modal');
+    const qrImage = document.getElementById('qr-image');
+    const projectorImage = document.getElementById('projector-qr-image');
+    const countdown = document.getElementById('countdown');
+    const projectorCountdown = document.getElementById('projector-countdown');
+    const ring = document.getElementById('countdown-ring');
+    const projectorRing = document.getElementById('projector-countdown-ring');
+    const serverTime = document.getElementById('server-time');
+    const projectorServerTime = document.getElementById('projector-server-time');
+
+    function syncProjector() {
+        if (qrImage && projectorImage && qrImage.src) {
+            projectorImage.src = qrImage.src;
+        }
+
+        if (countdown && projectorCountdown) {
+            projectorCountdown.textContent = countdown.textContent || '30';
+        }
+
+        if (ring && projectorRing) {
+            const progress = ring.style.getPropertyValue('--progress') || '360deg';
+            projectorRing.style.setProperty('--projector-progress', progress);
+        }
+
+        if (serverTime && projectorServerTime) {
+            projectorServerTime.textContent = serverTime.textContent || '-';
+        }
+    }
+
+    function openProjector() {
+        syncProjector();
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeProjector() {
+        modal.hidden = true;
+        document.body.style.overflow = '';
+    }
+
+    openButton?.addEventListener('click', openProjector);
+    closeButton?.addEventListener('click', closeProjector);
+
+    modal?.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            closeProjector();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && modal && !modal.hidden) {
+            closeProjector();
+        }
+    });
+
+    setInterval(function () {
+        if (modal && !modal.hidden) {
+            syncProjector();
+        }
+    }, 500);
 });
 </script>
 @endpush

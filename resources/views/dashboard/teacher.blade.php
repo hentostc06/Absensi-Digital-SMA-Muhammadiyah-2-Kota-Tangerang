@@ -49,8 +49,8 @@
                 @csrf
                 <input type="hidden" name="schedule_id" value="{{ $suggestedSchedule->id }}">
                 <label>
-                    Batas terlambat
-                    <input type="number" name="late_after_minutes" value="15" min="0" max="120" required>
+                    Batas status terlambat
+                    <input type="number" name="late_after_minutes" value="5" min="0" max="120" required>
                 </label>
                 <button type="submit" class="btn primary">Buka Sesi & Generate QR</button>
             </form>

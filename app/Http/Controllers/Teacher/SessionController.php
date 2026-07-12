@@ -67,6 +67,10 @@ class SessionController extends Controller
             ->latest('opened_at')
             ->first();
 
+        if ($openSession && ! $openSession->isOpen()) {
+            $openSession = null;
+        }
+
         return view('teacher.sessions.index', compact(
             'teacher',
             'day',
@@ -87,7 +91,8 @@ class SessionController extends Controller
 
         $data = $request->validate([
             'schedule_id' => ['nullable', 'exists:schedules,id'],
-            'late_after_minutes' => ['required', 'integer', 'min:0', 'max:120'],
+            'late_after_minutes' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'session_duration_minutes' => ['nullable', 'integer', 'min:5', 'max:120'],
             'mode' => ['nullable', 'in:auto,manual'],
         ]);
 
@@ -122,7 +127,8 @@ class SessionController extends Controller
                 'subject_id' => $schedule->subject_id,
                 'opened_at' => now(),
                 'status' => 'open',
-                'late_after_minutes' => $data['late_after_minutes'],
+                'late_after_minutes' => (int) ($data['late_after_minutes'] ?? 5),
+            'session_duration_minutes' => (int) ($data['session_duration_minutes'] ?? 15),
                 'token_version' => 1,
             ]);
         });

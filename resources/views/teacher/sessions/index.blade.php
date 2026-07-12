@@ -38,11 +38,17 @@
                     <input type="hidden" name="schedule_id" value="{{ $suggestedSchedule->id }}">
 
                     <label>
-                        Batas terlambat
-                        <input type="number" name="late_after_minutes" value="{{ old('late_after_minutes', 15) }}" min="0" max="120" required>
+                        Batas status terlambat
+                        <input type="number" name="late_after_minutes" value="{{ old('late_after_minutes', 5) }}" min="0" max="120" required>
                     </label>
 
                     <button class="btn primary" type="submit">Buka Otomatis</button>
+                
+                    <label>
+                        <span>Sesi Berakhir Setelah</span>
+                        <input type="number" name="session_duration_minutes" value="{{ old('session_duration_minutes', 15) }}" min="5" max="120">
+                    </label>
+
                 </form>
             </div>
         @else
@@ -75,8 +81,8 @@
             </label>
 
             <label>
-                Batas terlambat
-                <input type="number" name="late_after_minutes" value="15" min="0" max="120" required>
+                Batas status terlambat
+                <input type="number" name="late_after_minutes" value="5" min="0" max="120" required>
             </label>
 
             <button class="btn primary" type="submit" @disabled($allSchedules->isEmpty())>
