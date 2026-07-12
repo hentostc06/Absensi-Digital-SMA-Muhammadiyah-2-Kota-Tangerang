@@ -1,4 +1,0 @@
-<?php
-namespace App\Http\Controllers\Teacher;
-use App\Http\Controllers\Controller;use App\Models\{Attendance,AttendanceSession,Student};use Illuminate\Http\Request;
-class ManualAttendanceController extends Controller { public function store(Request $r,AttendanceSession $session){abort_unless($session->teacher_id===$r->user()->teacher->id,403);$d=$r->validate(['student_id'=>'required|exists:students,id','status'=>'required|in:hadir,terlambat,izin,sakit,alpa','notes'=>'nullable|max:500']);$student=Student::where('school_class_id',$session->school_class_id)->findOrFail($d['student_id']);Attendance::updateOrCreate(['attendance_session_id'=>$session->id,'student_id'=>$student->id],['status'=>$d['status'],'scanned_at'=>now(),'source'=>'manual','notes'=>$d['notes']??null,'ip_address'=>$r->ip(),'user_agent'=>substr((string)$r->userAgent(),0,500)]);return back()->with('success','Absensi manual tersimpan.');} }

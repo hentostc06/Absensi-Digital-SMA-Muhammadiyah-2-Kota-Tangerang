@@ -17,14 +17,14 @@
 <div class="account-workspace" data-account-page>
     <section class="card glass-panel account-create-card">
         <span class="section-kicker">BUAT AKUN BARU</span>
-        <h3>Pilih jenis akun</h3>
+        <p class="form-helper">Pilih jenis akun yang ingin dibuat. Field tambahan akan menyesuaikan role.</p>
 
         <form method="POST" action="{{ route('admin.accounts.store') }}" class="form account-form" data-account-form>
             @csrf
             <div class="role-picker">
-                <label class="role-option active" data-role-card="siswa"><input type="radio" name="role" value="siswa" checked><span>♙</span><strong>Siswa</strong><small>Admin pilih kelas, NIS otomatis</small></label>
-                <label class="role-option" data-role-card="guru"><input type="radio" name="role" value="guru"><span>♟</span><strong>Guru</strong><small>Jadwal otomatis tampil di dashboard guru</small></label>
-                <label class="role-option" data-role-card="admin"><input type="radio" name="role" value="admin"><span>◉</span><strong>Admin</strong><small>Akses penuh sistem</small></label>
+                <label class="role-option active" data-role-card="siswa"><input type="radio" name="role" value="siswa" checked><span>S</span><strong>Siswa</strong><small>Pilih kelas, NIS dibuat otomatis</small></label>
+                <label class="role-option" data-role-card="guru"><input type="radio" name="role" value="guru"><span>G</span><strong>Guru</strong><small>Jadwal tampil di dashboard guru</small></label>
+                <label class="role-option" data-role-card="admin"><input type="radio" name="role" value="admin"><span>A</span><strong>Admin</strong><small>Akses penuh sistem</small></label>
             </div>
 
             <div class="form grid">
