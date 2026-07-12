@@ -247,3 +247,238 @@ document.addEventListener('DOMContentLoaded', () => {
     bootPasswordToggle();
     bootAccountForm();
 });
+
+/* === CUSTOM CONFIRM MODAL PATCH === */
+(function () {
+    function html(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function (char) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char];
+        });
+    }
+
+    function normalizeMessage(message) {
+        message = String(message || '').trim();
+
+        const map = {
+            'Hapus guru ini?': {
+                title: 'Hapus Data Guru?',
+                message: 'Data guru akan dihapus jika belum memiliki jadwal atau riwayat. Jika sudah memiliki riwayat, sistem akan menonaktifkan akun agar laporan tetap aman.',
+                action: 'Ya, proses'
+            },
+            'Hapus siswa ini?': {
+                title: 'Hapus Data Siswa?',
+                message: 'Data siswa akan dihapus jika belum memiliki riwayat absensi. Jika sudah memiliki riwayat, sistem akan menonaktifkan akun agar laporan tetap aman.',
+                action: 'Ya, proses'
+            },
+            'Hapus akun ini?': {
+                title: 'Hapus Akun?',
+                message: 'Akun akan diproses dengan aman. Jika akun sudah memiliki riwayat penting, sistem akan menonaktifkan akun, bukan merusak data laporan.',
+                action: 'Ya, proses'
+            },
+            'Reset password akun ini?': {
+                title: 'Reset Password?',
+                message: 'Password akun akan dibuat ulang. Berikan password baru hanya kepada pemilik akun yang bersangkutan.',
+                action: 'Ya, reset'
+            },
+            'Nonaktifkan akun ini?': {
+                title: 'Nonaktifkan Akun?',
+                message: 'Akun tidak bisa login sampai admin mengaktifkannya kembali.',
+                action: 'Ya, nonaktifkan'
+            }
+        };
+
+        if (map[message]) {
+            return map[message];
+        }
+
+        let lower = message.toLowerCase();
+        let title = 'Konfirmasi Tindakan';
+        let action = 'Ya, lanjutkan';
+
+        if (lower.includes('hapus') || lower.includes('delete')) {
+            title = 'Hapus Data?';
+            action = 'Ya, hapus';
+        } else if (lower.includes('reset')) {
+            title = 'Reset Data?';
+            action = 'Ya, reset';
+        } else if (lower.includes('nonaktif')) {
+            title = 'Nonaktifkan Data?';
+            action = 'Ya, nonaktifkan';
+        } else if (lower.includes('tutup')) {
+            title = 'Tutup Sesi?';
+            action = 'Ya, tutup';
+        }
+
+        return {
+            title: title,
+            message: message || 'Apakah Anda yakin ingin melanjutkan tindakan ini?',
+            action: action
+        };
+    }
+
+    function ensureModal() {
+        let modal = document.getElementById('bc-confirm-modal');
+
+        if (modal) {
+            return modal;
+        }
+
+        modal = document.createElement('div');
+        modal.id = 'bc-confirm-modal';
+        modal.className = 'bc-confirm hidden';
+        modal.innerHTML = `
+            <div class="bc-confirm-backdrop" data-confirm-cancel></div>
+            <div class="bc-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="bc-confirm-title">
+                <div class="bc-confirm-icon">!</div>
+                <div class="bc-confirm-content">
+                    <span class="bc-confirm-kicker">Konfirmasi Admin</span>
+                    <h2 id="bc-confirm-title">Konfirmasi Tindakan</h2>
+                    <p id="bc-confirm-message">Apakah Anda yakin?</p>
+                </div>
+                <div class="bc-confirm-actions">
+                    <button type="button" class="bc-confirm-cancel" data-confirm-cancel>Batal</button>
+                    <button type="button" class="bc-confirm-ok" data-confirm-ok>Ya, lanjutkan</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        return modal;
+    }
+
+    window.badcodingConfirm = function (message) {
+        const modal = ensureModal();
+        const data = normalizeMessage(message);
+
+        modal.querySelector('#bc-confirm-title').innerHTML = html(data.title);
+        modal.querySelector('#bc-confirm-message').innerHTML = html(data.message);
+        modal.querySelector('[data-confirm-ok]').innerHTML = html(data.action);
+
+        modal.classList.remove('hidden');
+        document.body.classList.add('bc-confirm-open');
+
+        return new Promise(function (resolve) {
+            let done = false;
+
+            function close(result) {
+                if (done) return;
+                done = true;
+
+                modal.classList.add('hidden');
+                document.body.classList.remove('bc-confirm-open');
+
+                modal.querySelectorAll('[data-confirm-cancel]').forEach(function (button) {
+                    button.removeEventListener('click', cancel);
+                });
+
+                modal.querySelector('[data-confirm-ok]').removeEventListener('click', ok);
+                document.removeEventListener('keydown', esc);
+
+                resolve(result);
+            }
+
+            function cancel() {
+                close(false);
+            }
+
+            function ok() {
+                close(true);
+            }
+
+            function esc(event) {
+                if (event.key === 'Escape') {
+                    close(false);
+                }
+            }
+
+            modal.querySelectorAll('[data-confirm-cancel]').forEach(function (button) {
+                button.addEventListener('click', cancel);
+            });
+
+            modal.querySelector('[data-confirm-ok]').addEventListener('click', ok);
+            document.addEventListener('keydown', esc);
+        });
+    };
+
+    function convertInlineConfirms() {
+        document.querySelectorAll('[onsubmit*="confirm"]').forEach(function (element) {
+            const raw = element.getAttribute('onsubmit') || '';
+            const match = raw.match(/confirm\((['"`])([\s\S]*?)\1\)/);
+
+            if (match) {
+                element.dataset.confirm = match[2];
+            }
+
+            element.removeAttribute('onsubmit');
+        });
+
+        document.querySelectorAll('[onclick*="confirm"]').forEach(function (element) {
+            const raw = element.getAttribute('onclick') || '';
+            const match = raw.match(/confirm\((['"`])([\s\S]*?)\1\)/);
+
+            if (match) {
+                element.dataset.confirm = match[2];
+            }
+
+            element.removeAttribute('onclick');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        convertInlineConfirms();
+
+        document.addEventListener('submit', async function (event) {
+            const form = event.target.closest('form[data-confirm]');
+
+            if (!form || form.dataset.confirmed === '1') {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const ok = await window.badcodingConfirm(form.dataset.confirm);
+
+            if (ok) {
+                form.dataset.confirmed = '1';
+                form.requestSubmit ? form.requestSubmit() : form.submit();
+            }
+        }, true);
+
+        document.addEventListener('click', async function (event) {
+            const target = event.target.closest('[data-confirm]');
+
+            if (!target || target.tagName === 'FORM') {
+                return;
+            }
+
+            if (target.dataset.confirmed === '1') {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const ok = await window.badcodingConfirm(target.dataset.confirm);
+
+            if (!ok) {
+                return;
+            }
+
+            target.dataset.confirmed = '1';
+
+            if (target.tagName === 'A' && target.href) {
+                window.location.href = target.href;
+                return;
+            }
+
+            target.click();
+        }, true);
+    });
+})();

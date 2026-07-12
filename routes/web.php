@@ -43,6 +43,8 @@ Route::middleware('auth')->group(function () {
             'schedules' => ScheduleController::class,
         ], ['except' => ['show']]);
 
+        Route::get('classes/{schoolClass}', [SchoolClassController::class, 'show'])->name('classes.show');
+
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
         Route::get('/reports/excel', [ReportController::class, 'excel'])->name('reports.excel');
@@ -64,3 +66,26 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat', HistoryController::class)->name('history');
     });
 });
+
+// BADCODING_CLASS_DETAIL_ROUTE_START
+Route::middleware(['web', 'auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('classes/{schoolClass}', [SchoolClassController::class, 'show'])
+            ->whereNumber('schoolClass')
+            ->name('classes.show');
+    });
+// BADCODING_CLASS_DETAIL_ROUTE_END
+
+// BADCODING_TEACHER_DETAIL_ROUTE_START
+Route::middleware(['web', 'auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('teachers/{teacher}', [TeacherController::class, 'show'])
+            ->whereNumber('teacher')
+            ->name('teachers.show');
+    });
+// BADCODING_TEACHER_DETAIL_ROUTE_END
+

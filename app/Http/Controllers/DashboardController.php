@@ -9,10 +9,12 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use Illuminate\Support\Collection;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke()
+    public function __invoke(): View
     {
         $user = request()->user();
 
@@ -23,7 +25,9 @@ class DashboardController extends Controller
                 'classes' => SchoolClass::count(),
                 'accounts' => User::count(),
                 'today' => Attendance::whereDate('scanned_at', today())->count(),
-                'lateToday' => Attendance::whereDate('scanned_at', today())->where('status', 'terlambat')->count(),
+                'lateToday' => Attendance::whereDate('scanned_at', today())
+                    ->where('status', 'terlambat')
+                    ->count(),
                 'openSessions' => AttendanceSession::where('status', 'open')->count(),
                 'recentAccounts' => User::latest()->limit(6)->get(),
             ]);
@@ -32,17 +36,8 @@ class DashboardController extends Controller
         if ($user->role === 'guru') {
             $teacher = $user->teacher;
             $day = $this->todayName();
-            $time = now()->format('H:i:s');
-
-            $currentSchedule = $teacher
-                ? Schedule::with(['schoolClass', 'subject'])
-                    ->where('teacher_id', $teacher->id)
-                    ->where('day_of_week', $day)
-                    ->where('start_time', '<=', $time)
-                    ->where('end_time', '>=', $time)
-                    ->where('is_active', true)
-                    ->first()
-                : null;
+            $now = now();
+            $time = $now->format('H:i:s');
 
             $todaySchedules = $teacher
                 ? Schedule::with(['schoolClass', 'subject'])
@@ -53,15 +48,38 @@ class DashboardController extends Controller
                     ->get()
                 : collect();
 
+            $currentSchedule = $todaySchedules->first(function ($schedule) use ($time): bool {
+                return $schedule->start_time <= $time && $schedule->end_time >= $time;
+            });
+
+            $nextSchedule = $todaySchedules->first(function ($schedule) use ($time): bool {
+                return $schedule->start_time > $time;
+            });
+
+            $suggestedSchedule = $currentSchedule ?: $nextSchedule;
+            $scheduleStatus = $currentSchedule
+                ? 'Sedang berlangsung'
+                : ($nextSchedule ? 'Jadwal berikutnya' : 'Tidak ada jadwal aktif hari ini');
+
             $openSession = $teacher
                 ? AttendanceSession::with(['schoolClass', 'subject'])
                     ->where('teacher_id', $teacher->id)
                     ->where('status', 'open')
-                    ->latest()
+                    ->latest('opened_at')
                     ->first()
                 : null;
 
-            return view('dashboard.teacher', compact('teacher', 'day', 'currentSchedule', 'todaySchedules', 'openSession'));
+            return view('dashboard.teacher', [
+                'teacher' => $teacher,
+                'teacherTitle' => $this->teacherTitle($teacher),
+                'day' => $day,
+                'todaySchedules' => $todaySchedules,
+                'currentSchedule' => $currentSchedule,
+                'nextSchedule' => $nextSchedule,
+                'suggestedSchedule' => $suggestedSchedule,
+                'scheduleStatus' => $scheduleStatus,
+                'openSession' => $openSession,
+            ]);
         }
 
         $student = $user->student?->load('schoolClass');
@@ -69,10 +87,18 @@ class DashboardController extends Controller
         return view('dashboard.student', [
             'student' => $student,
             'todayAttendance' => $student
-                ? Attendance::with('session.subject')->where('student_id', $student->id)->whereDate('created_at', today())->latest()->get()
+                ? Attendance::with('session.subject')
+                    ->where('student_id', $student->id)
+                    ->whereDate('scanned_at', today())
+                    ->latest('scanned_at')
+                    ->get()
                 : collect(),
             'recent' => $student
-                ? $student->attendances()->with(['session.subject', 'session.schoolClass'])->latest()->limit(8)->get()
+                ? $student->attendances()
+                    ->with(['session.subject', 'session.schoolClass'])
+                    ->latest('scanned_at')
+                    ->limit(8)
+                    ->get()
                 : collect(),
         ]);
     }
@@ -88,5 +114,20 @@ class DashboardController extends Controller
             6 => 'Sabtu',
             7 => 'Minggu',
         ][(int) now()->format('N')];
+    }
+
+    private function teacherTitle(?Teacher $teacher): string
+    {
+        $gender = $teacher?->gender;
+
+        if ($gender === 'P') {
+            return 'Ibu';
+        }
+
+        if ($gender === 'L') {
+            return 'Bapak';
+        }
+
+        return 'Bapak/Ibu';
     }
 }

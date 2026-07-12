@@ -21,20 +21,64 @@ class SessionController extends Controller
     public function index()
     {
         $teacher = request()->user()->teacher;
+        $day = $this->todayName();
+        $time = now()->format('H:i:s');
 
-        $schedules = Schedule::with(['schoolClass', 'subject'])
-            ->where('teacher_id', $teacher->id)
-            ->where('is_active', true)
-            ->orderByRaw("CASE day_of_week WHEN 'Senin' THEN 1 WHEN 'Selasa' THEN 2 WHEN 'Rabu' THEN 3 WHEN 'Kamis' THEN 4 WHEN 'Jumat' THEN 5 WHEN 'Sabtu' THEN 6 ELSE 7 END")
-            ->orderBy('start_time')
-            ->get();
+        $todaySchedules = $teacher
+            ? Schedule::with(['schoolClass', 'subject'])
+                ->where('teacher_id', $teacher->id)
+                ->where('day_of_week', $day)
+                ->where('is_active', true)
+                ->orderBy('start_time')
+                ->get()
+            : collect();
+
+        $allSchedules = $teacher
+            ? Schedule::with(['schoolClass', 'subject'])
+                ->where('teacher_id', $teacher->id)
+                ->where('is_active', true)
+                ->orderByRaw("CASE day_of_week WHEN 'Senin' THEN 1 WHEN 'Selasa' THEN 2 WHEN 'Rabu' THEN 3 WHEN 'Kamis' THEN 4 WHEN 'Jumat' THEN 5 WHEN 'Sabtu' THEN 6 ELSE 7 END")
+                ->orderBy('start_time')
+                ->get()
+            : collect();
+
+        $currentSchedule = $todaySchedules->first(function ($schedule) use ($time) {
+            return $schedule->start_time <= $time && $schedule->end_time >= $time;
+        });
+
+        $nextSchedule = $todaySchedules->first(function ($schedule) use ($time) {
+            return $schedule->start_time > $time;
+        });
+
+        $suggestedSchedule = $currentSchedule ?: $nextSchedule;
+
+        $scheduleStatus = $currentSchedule
+            ? 'Sedang berlangsung'
+            : ($nextSchedule ? 'Jadwal berikutnya' : 'Tidak ada jadwal otomatis hari ini');
 
         $sessions = AttendanceSession::with(['schoolClass', 'subject'])
             ->where('teacher_id', $teacher->id)
             ->latest()
             ->paginate(12);
 
-        return view('teacher.sessions.index', compact('schedules', 'sessions'));
+        $openSession = AttendanceSession::with(['schoolClass', 'subject'])
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 'open')
+            ->latest('opened_at')
+            ->first();
+
+        return view('teacher.sessions.index', compact(
+            'teacher',
+            'day',
+            'todaySchedules',
+            'allSchedules',
+            'currentSchedule',
+            'nextSchedule',
+            'suggestedSchedule',
+            'scheduleStatus',
+            'sessions',
+            'openSession'
+        ));
     }
 
     public function store(Request $request)
@@ -42,18 +86,33 @@ class SessionController extends Controller
         $teacher = $request->user()->teacher;
 
         $data = $request->validate([
-            'schedule_id' => ['required', 'exists:schedules,id'],
+            'schedule_id' => ['nullable', 'exists:schedules,id'],
             'late_after_minutes' => ['required', 'integer', 'min:0', 'max:120'],
+            'mode' => ['nullable', 'in:auto,manual'],
         ]);
 
-        $schedule = Schedule::where('teacher_id', $teacher->id)
-            ->where('is_active', true)
-            ->findOrFail($data['schedule_id']);
+        $schedule = null;
+
+        if (filled($data['schedule_id'] ?? null)) {
+            $schedule = Schedule::with(['schoolClass', 'subject'])
+                ->where('teacher_id', $teacher->id)
+                ->where('is_active', true)
+                ->findOrFail($data['schedule_id']);
+        } else {
+            $schedule = $this->autoScheduleFor($teacher->id);
+        }
+
+        if (! $schedule) {
+            return back()->with('error', 'Tidak ada jadwal yang bisa dibuka. Gunakan Mode Testing untuk memilih jadwal manual.');
+        }
 
         $session = DB::transaction(function () use ($teacher, $schedule, $data) {
             AttendanceSession::where('teacher_id', $teacher->id)
                 ->where('status', 'open')
-                ->update(['status' => 'closed', 'closed_at' => now()]);
+                ->update([
+                    'status' => 'closed',
+                    'closed_at' => now(),
+                ]);
 
             return AttendanceSession::create([
                 'uuid' => (string) Str::uuid(),
@@ -68,12 +127,14 @@ class SessionController extends Controller
             ]);
         });
 
-        return redirect()->route('teacher.sessions.show', $session)->with('success', 'Sesi absensi berhasil dibuka.');
+        return redirect()->route('teacher.sessions.show', $session)
+            ->with('success', 'Sesi absensi berhasil dibuka.');
     }
 
     public function show(AttendanceSession $session)
     {
         $this->own($session);
+
         $session->load(['schoolClass', 'subject', 'attendances.student.user']);
 
         return view('teacher.sessions.show', compact('session'));
@@ -122,7 +183,10 @@ class SessionController extends Controller
                 'time' => $attendance->scanned_at?->format('H:i:s'),
             ]);
 
-        return response()->json(['count' => $items->count(), 'items' => $items]);
+        return response()->json([
+            'count' => $items->count(),
+            'items' => $items,
+        ]);
     }
 
     public function close(AttendanceSession $session)
@@ -130,7 +194,8 @@ class SessionController extends Controller
         $this->own($session);
 
         if (! $session->isOpen()) {
-            return redirect()->route('teacher.sessions.index')->with('error', 'Sesi absensi sudah ditutup.');
+            return redirect()->route('teacher.sessions.index')
+                ->with('error', 'Sesi absensi sudah ditutup.');
         }
 
         $session->update([
@@ -139,7 +204,37 @@ class SessionController extends Controller
             'token_version' => $session->token_version + 1,
         ]);
 
-        return redirect()->route('teacher.sessions.index')->with('success', 'Sesi absensi ditutup.');
+        return redirect()->route('teacher.sessions.index')
+            ->with('success', 'Sesi absensi ditutup.');
+    }
+
+    private function autoScheduleFor(int $teacherId): ?Schedule
+    {
+        $day = $this->todayName();
+        $time = now()->format('H:i:s');
+
+        $todaySchedules = Schedule::with(['schoolClass', 'subject'])
+            ->where('teacher_id', $teacherId)
+            ->where('day_of_week', $day)
+            ->where('is_active', true)
+            ->orderBy('start_time')
+            ->get();
+
+        return $todaySchedules->first(fn ($schedule) => $schedule->start_time <= $time && $schedule->end_time >= $time)
+            ?: $todaySchedules->first(fn ($schedule) => $schedule->start_time > $time);
+    }
+
+    private function todayName(): string
+    {
+        return [
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+            7 => 'Minggu',
+        ][(int) now()->format('N')];
     }
 
     private function own(AttendanceSession $session): void

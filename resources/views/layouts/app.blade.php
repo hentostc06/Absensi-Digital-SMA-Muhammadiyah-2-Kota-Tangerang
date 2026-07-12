@@ -22,7 +22,7 @@
         </a>
 
         <div class="sidebar-divider"></div>
-        <p class="nav-label">MENU</p>
+        <p class="nav-label">MENU UTAMA</p>
 
         <nav class="sidebar-nav">
             <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"><span class="nav-icon">D</span><span>Dashboard</span></a>
@@ -65,9 +65,9 @@
         <header class="topbar">
             <div class="topbar-left">
                 <button type="button" class="mobile-menu-button" onclick="document.body.classList.toggle('menu-open')">☰</button>
-                <div>
+                <div class="topbar-title-area">
                     <span class="topbar-caption">Sistem Absensi QR</span>
-                    <strong class="topbar-title">@yield('title', 'Dashboard')</strong>
+                    @include('partials.breadcrumbs')
                 </div>
             </div>
 

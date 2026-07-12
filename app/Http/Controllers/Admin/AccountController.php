@@ -215,22 +215,60 @@ class AccountController extends Controller
         return back()->with('success', 'Password berhasil direset.');
     }
 
+
     public function destroy(User $account)
     {
         if ($account->id === auth()->id()) {
             return back()->with('error', 'Akun yang sedang digunakan tidak dapat dihapus.');
         }
 
-        try {
-            $role = $account->role;
-            $account->delete();
+        $role = $account->role;
+        $account->load(['teacher', 'student']);
+
+        if ($role === 'guru' && $account->teacher) {
+            $teacher = $account->teacher;
+
+            if ($teacher->schedules()->exists() || $teacher->sessions()->exists()) {
+                $account->update(['is_active' => false]);
+
+                return redirect()->route('admin.accounts.index', ['role' => $role])
+                    ->with('success', 'Akun guru tidak dihapus permanen karena sudah memiliki jadwal atau riwayat absensi. Akun sudah dinonaktifkan.');
+            }
+
+            DB::transaction(function () use ($account, $teacher) {
+                $teacher->delete();
+                $account->delete();
+            });
 
             return redirect()->route('admin.accounts.index', ['role' => $role])
-                ->with('success', 'Akun berhasil dihapus.');
-        } catch (QueryException) {
-            return back()->with('error', 'Akun tidak bisa dihapus karena sudah punya riwayat absensi atau relasi data.');
+                ->with('success', 'Akun guru berhasil dihapus.');
         }
+
+        if ($role === 'siswa' && $account->student) {
+            $student = $account->student;
+
+            if ($student->attendances()->exists()) {
+                $account->update(['is_active' => false]);
+
+                return redirect()->route('admin.accounts.index', ['role' => $role])
+                    ->with('success', 'Akun siswa tidak dihapus permanen karena sudah memiliki riwayat absensi. Akun sudah dinonaktifkan.');
+            }
+
+            DB::transaction(function () use ($account, $student) {
+                $student->delete();
+                $account->delete();
+            });
+
+            return redirect()->route('admin.accounts.index', ['role' => $role])
+                ->with('success', 'Akun siswa berhasil dihapus.');
+        }
+
+        $account->delete();
+
+        return redirect()->route('admin.accounts.index', ['role' => $role])
+            ->with('success', 'Akun berhasil dihapus.');
     }
+
 
     private function defaultPassword(string $role): string
     {

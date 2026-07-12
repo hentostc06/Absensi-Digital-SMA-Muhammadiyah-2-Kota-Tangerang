@@ -114,7 +114,7 @@
             @endforelse
         </div>
 
-        {{ $accounts->links() }}
+        {{ $accounts->links('vendor.pagination.badcoding') }}
     </section>
 </div>
 @endsection
