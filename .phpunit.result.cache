@@ -1,0 +1,1 @@
+{"version":2,"defects":[],"times":{"Tests\\Unit\\DynamicQrServiceTest::test_token_valid_only_in_same_30_second_slot":0.03}}

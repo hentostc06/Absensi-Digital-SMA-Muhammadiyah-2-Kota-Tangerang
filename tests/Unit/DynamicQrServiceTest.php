@@ -1,0 +1,3 @@
+<?php
+namespace Tests\Unit;use App\Models\AttendanceSession;use App\Services\DynamicQrService;use Carbon\Carbon;use Tests\TestCase;
+class DynamicQrServiceTest extends TestCase{public function test_token_valid_only_in_same_30_second_slot():void{config(['app.key'=>'base64:'.base64_encode(random_bytes(32))]);$s=new AttendanceSession(['uuid'=>'abc','status'=>'open','opened_at'=>now(),'token_version'=>1]);$s->id=10;$svc=new DynamicQrService;$t=Carbon::parse('2026-01-01 10:00:05');$token=$svc->generate($s,$t)['token'];$this->assertTrue($svc->validate($token,$s,$t->copy()->addSeconds(20)));$this->assertFalse($svc->validate($token,$s,$t->copy()->addSeconds(30)));}}

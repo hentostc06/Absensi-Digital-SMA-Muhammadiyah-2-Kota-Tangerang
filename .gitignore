@@ -1,0 +1,15 @@
+/vendor
+/node_modules
+/.env
+/.env.*
+!/env.example
+/storage/*.key
+/storage/logs/*.log
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/bootstrap/cache/*.php
+/public/storage
+/database/backups/*.sql
+*.zip
+*.tar.gz
