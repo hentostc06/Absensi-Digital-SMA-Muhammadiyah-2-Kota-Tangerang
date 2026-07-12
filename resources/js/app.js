@@ -482,3 +482,866 @@ document.addEventListener('DOMContentLoaded', () => {
         }, true);
     });
 })();
+
+/* === MOBILE CAMERA COOKIE PREFLIGHT PATCH === */
+(function () {
+    function setScanFeedback(type, title, message) {
+        const el = document.getElementById('scan-feedback');
+        if (!el) return;
+
+        el.className = `scan-feedback ${type === 'ok' ? 'success' : 'error'}`;
+        el.innerHTML = `
+            <div class="icon">${type === 'ok' ? '✓' : '!'}</div>
+            <strong>${title}</strong>
+            <span>${message}</span>
+        `;
+    }
+
+    function cookieWritable() {
+        if (!navigator.cookieEnabled) return false;
+
+        try {
+            document.cookie = "bc_cookie_test=1; path=/; SameSite=Lax";
+            return document.cookie.includes("bc_cookie_test=1");
+        } catch (e) {
+            return false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const cameraButton = document.getElementById('camera-start');
+
+        if (!cameraButton) return;
+
+        if (!window.isSecureContext) {
+            setScanFeedback(
+                'error',
+                'Kamera wajib HTTPS.',
+                'Buka dari https://absensi.badcoding.biz.id, bukan http://IP-LAN atau http://localhost di HP.'
+            );
+        } else if (!cookieWritable()) {
+            setScanFeedback(
+                'error',
+                'Cookie browser diblokir.',
+                'Aktifkan cookie di browser HP agar login dan izin kamera berjalan normal.'
+            );
+        } else {
+            setScanFeedback(
+                'ok',
+                'Browser siap.',
+                'Cookie aktif. Tekan Aktifkan Kamera lalu pilih Izinkan.'
+            );
+        }
+
+        cameraButton.addEventListener('click', function (event) {
+            if (!window.isSecureContext) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                setScanFeedback(
+                    'error',
+                    'Kamera ditolak browser.',
+                    'Kamera HP hanya aktif lewat HTTPS. Gunakan https://absensi.badcoding.biz.id.'
+                );
+                return;
+            }
+
+            if (!cookieWritable()) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                setScanFeedback(
+                    'error',
+                    'Cookie browser belum aktif.',
+                    'Buka pengaturan browser HP, izinkan cookies untuk situs ini, lalu refresh halaman.'
+                );
+            }
+        }, true);
+    });
+})();
+
+/* === SERVER QR AND BACK CAMERA FINAL FIX === */
+(function () {
+    const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function (char) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char];
+        });
+    }
+
+    function isSecureCameraContext() {
+        return window.isSecureContext || ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+    }
+
+    async function readJson(url) {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        const text = await response.text();
+
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server tidak mengembalikan JSON. Cek login/session atau HTTPS.');
+        }
+
+        const data = JSON.parse(text);
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Request gagal.');
+        }
+
+        return data;
+    }
+
+    window.dynamicQr = function ({ tokenUrl, attendanceUrl }) {
+        const image = document.getElementById('qr-image');
+        const loader = document.getElementById('qr-loader');
+        const countdown = document.getElementById('countdown');
+        const ring = document.getElementById('countdown-ring');
+        const serverTime = document.getElementById('server-time');
+        const qrStatus = document.getElementById('qr-status');
+        const attendanceCount = document.getElementById('attendance-count');
+        const attendanceList = document.getElementById('attendance-list');
+        const lastSync = document.getElementById('last-sync');
+
+        let countdownTimer = null;
+        let attendanceTimer = null;
+        let loading = false;
+
+        function setLoader(message, error = false) {
+            if (!loader) return;
+            loader.classList.remove('hidden');
+            loader.innerHTML = `<span class="${error ? 'loader-error' : ''}">${escapeHtml(message)}</span>`;
+        }
+
+        function hideLoader() {
+            loader?.classList.add('hidden');
+        }
+
+        function startCountdown(seconds) {
+            clearInterval(countdownTimer);
+
+            let left = Number(seconds) || 30;
+            const max = 30;
+
+            function render() {
+                const safeLeft = Math.max(left, 0);
+
+                if (countdown) countdown.textContent = safeLeft;
+                ring?.style.setProperty('--progress', `${Math.max(0, Math.min(1, safeLeft / max)) * 360}deg`);
+
+                if (left <= 0) {
+                    clearInterval(countdownTimer);
+                    loadToken();
+                    return;
+                }
+
+                left--;
+            }
+
+            render();
+            countdownTimer = setInterval(render, 1000);
+        }
+
+        async function loadToken() {
+            if (loading) return;
+            loading = true;
+
+            image?.classList.remove('ready');
+            setLoader('Memuat QR Code...');
+
+            try {
+                const data = await readJson(tokenUrl + (tokenUrl.includes('?') ? '&' : '?') + '_=' + Date.now());
+
+                if (!data.svg) {
+                    throw new Error('Data QR kosong dari server.');
+                }
+
+                if (image) {
+                    image.onload = function () {
+                        image.classList.add('ready');
+                        hideLoader();
+                    };
+
+                    image.onerror = function () {
+                        setLoader('QR gagal dirender. Refresh halaman.', true);
+                    };
+
+                    image.src = data.svg;
+                }
+
+                if (serverTime && data.server_time) {
+                    serverTime.textContent = new Date(data.server_time).toLocaleString('id-ID', {
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+
+                if (qrStatus) {
+                    qrStatus.textContent = 'Aktif';
+                    qrStatus.className = 'qr-status online';
+                }
+
+                startCountdown(data.expires_in || 30);
+            } catch (error) {
+                console.error(error);
+
+                if (qrStatus) {
+                    qrStatus.textContent = 'Error';
+                    qrStatus.className = 'qr-status offline';
+                }
+
+                setLoader(error.message || 'QR gagal dimuat.', true);
+            } finally {
+                loading = false;
+            }
+        }
+
+        function statusClass(status) {
+            status = String(status || '').toLowerCase();
+            return ['hadir', 'terlambat', 'izin', 'sakit', 'alpa'].includes(status) ? status : 'hadir';
+        }
+
+        function renderAttendance(items) {
+            if (!attendanceList) return;
+
+            if (!items.length) {
+                attendanceList.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            <div class="attendance-empty-state">
+                                <strong>Belum ada siswa yang melakukan scan</strong>
+                                <p>Data akan muncul otomatis setelah siswa berhasil memindai QR.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            attendanceList.innerHTML = items.map(function (item) {
+                const initial = String(item.name || '?').charAt(0).toUpperCase();
+
+                return `
+                    <tr>
+                        <td><span class="nis-cell">${escapeHtml(item.nis)}</span></td>
+                        <td>
+                            <div class="student-cell">
+                                <span class="student-avatar">${escapeHtml(initial)}</span>
+                                <strong>${escapeHtml(item.name)}</strong>
+                            </div>
+                        </td>
+                        <td><span class="attendance-badge ${statusClass(item.status)}">${escapeHtml(item.status)}</span></td>
+                        <td>${escapeHtml(item.time)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadAttendance() {
+            try {
+                const data = await readJson(attendanceUrl + (attendanceUrl.includes('?') ? '&' : '?') + '_=' + Date.now());
+
+                if (attendanceCount) attendanceCount.textContent = data.count || 0;
+                renderAttendance(data.items || []);
+                if (lastSync) lastSync.textContent = 'Diperbarui ' + new Date().toLocaleTimeString('id-ID');
+            } catch (error) {
+                console.error(error);
+                if (lastSync) lastSync.textContent = 'Sinkronisasi gagal';
+            }
+        }
+
+        loadToken();
+        loadAttendance();
+
+        attendanceTimer = setInterval(loadAttendance, 3000);
+
+        window.addEventListener('beforeunload', function () {
+            clearInterval(countdownTimer);
+            clearInterval(attendanceTimer);
+        });
+    };
+
+    window.studentScanner = function (url) {
+        const readerId = 'reader';
+        const feedback = document.getElementById('scan-feedback');
+        const startBtn = document.getElementById('camera-start');
+        const stopBtn = document.getElementById('camera-stop');
+        const select = document.getElementById('camera-device');
+        const manualForm = document.getElementById('manual-form');
+        const manualToken = document.getElementById('manual-token');
+
+        let scanner = null;
+        let locked = false;
+        let lastToken = '';
+        let currentCameraId = '';
+
+        function show(ok, title, detail = '') {
+            if (!feedback) return;
+
+            feedback.className = `scan-feedback ${ok ? 'success' : 'error'}`;
+            feedback.innerHTML = `
+                <div class="icon">${ok ? '✓' : '!'}</div>
+                <strong>${escapeHtml(title)}</strong>
+                <span>${escapeHtml(detail)}</span>
+            `;
+        }
+
+        async function submit(token) {
+            token = String(token || '').trim();
+
+            if (locked || !token || token === lastToken) return;
+
+            locked = true;
+            lastToken = token;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ token })
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                show(
+                    response.ok,
+                    data.message || (response.ok ? 'Absensi berhasil dicatat.' : 'Absensi gagal.'),
+                    data.subject ? `${data.subject} • ${data.time} • ${data.status}` : ''
+                );
+
+                if (!response.ok) {
+                    setTimeout(() => lastToken = '', 1300);
+                }
+            } catch (error) {
+                show(false, 'Koneksi ke server gagal.', 'Periksa jaringan lalu coba lagi.');
+                setTimeout(() => lastToken = '', 1300);
+            } finally {
+                setTimeout(() => locked = false, 1500);
+            }
+        }
+
+        async function warmPermission() {
+            if (!navigator.mediaDevices?.getUserMedia) return;
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: {
+                        facingMode: { ideal: 'environment' }
+                    }
+                });
+
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                // Nanti Html5Qrcode akan kasih pesan permission yang lebih jelas.
+            }
+        }
+
+        async function getCameras() {
+            await warmPermission();
+
+            let cameras = await Html5Qrcode.getCameras();
+
+            if (select) {
+                select.innerHTML = cameras.map(function (camera, index) {
+                    return `<option value="${escapeHtml(camera.id)}">${escapeHtml(camera.label || `Kamera ${index + 1}`)}</option>`;
+                }).join('');
+            }
+
+            return cameras;
+        }
+
+        function findBackCamera(cameras) {
+            const backRegex = /(back|rear|environment|belakang|kamera belakang|0,\s*facing back)/i;
+
+            return cameras.find(camera => backRegex.test(camera.label || ''))
+                || cameras[cameras.length - 1]
+                || cameras[0];
+        }
+
+        async function stop() {
+            try {
+                if (scanner?.isScanning) {
+                    await scanner.stop();
+                }
+
+                show(true, 'Kamera dihentikan.', 'Tekan Aktifkan Kamera untuk memindai lagi.');
+            } catch (error) {
+                show(false, 'Gagal menghentikan kamera.');
+            } finally {
+                if (startBtn) startBtn.disabled = false;
+                if (stopBtn) stopBtn.disabled = true;
+            }
+        }
+
+        async function startWithDevice(deviceId) {
+            scanner = scanner || new Html5Qrcode(readerId, { verbose: false });
+
+            await scanner.start(
+                { deviceId: { exact: deviceId } },
+                {
+                    fps: 10,
+                    qrbox: { width: 260, height: 260 },
+                    aspectRatio: 1.0,
+                    disableFlip: false
+                },
+                text => submit(text),
+                () => {}
+            );
+        }
+
+        async function startWithFacingMode() {
+            scanner = scanner || new Html5Qrcode(readerId, { verbose: false });
+
+            await scanner.start(
+                { facingMode: { exact: 'environment' } },
+                {
+                    fps: 10,
+                    qrbox: { width: 260, height: 260 },
+                    aspectRatio: 1.0,
+                    disableFlip: false
+                },
+                text => submit(text),
+                () => {}
+            );
+        }
+
+        async function start() {
+            if (!isSecureCameraContext()) {
+                show(false, 'Kamera wajib HTTPS.', 'Buka web dari https://absensi.badcoding.biz.id, bukan HTTP/IP LAN.');
+                return;
+            }
+
+            try {
+                if (startBtn) startBtn.disabled = true;
+
+                const cameras = await getCameras();
+
+                if (!cameras.length) {
+                    throw new Error('Perangkat kamera tidak ditemukan.');
+                }
+
+                const preferred = select?.value
+                    ? cameras.find(camera => camera.id === select.value)
+                    : findBackCamera(cameras);
+
+                currentCameraId = preferred?.id || '';
+
+                if (select && currentCameraId) {
+                    select.value = currentCameraId;
+                }
+
+                try {
+                    await startWithDevice(currentCameraId);
+                } catch (deviceError) {
+                    console.warn('DeviceId gagal, coba facingMode environment.', deviceError);
+                    await startWithFacingMode();
+                }
+
+                if (stopBtn) stopBtn.disabled = false;
+
+                show(true, 'Kamera belakang aktif.', 'Arahkan kamera ke QR Code yang ditampilkan guru.');
+            } catch (error) {
+                console.error(error);
+
+                if (startBtn) startBtn.disabled = false;
+
+                const message = String(error?.message || error || '');
+
+                if (/Permission|NotAllowed|denied|izin/i.test(message)) {
+                    show(false, 'Izin kamera ditolak.', 'Buka pengaturan browser HP, izinkan kamera untuk situs ini, lalu refresh.');
+                } else if (/Requested device not found|Overconstrained/i.test(message)) {
+                    show(false, 'Kamera belakang tidak tersedia.', 'Pilih kamera lain dari dropdown lalu coba lagi.');
+                } else {
+                    show(false, 'Kamera tidak dapat dibuka.', message || 'Coba refresh halaman dan izinkan kamera.');
+                }
+            }
+        }
+
+        startBtn?.addEventListener('click', start);
+        stopBtn?.addEventListener('click', stop);
+
+        select?.addEventListener('change', async function () {
+            currentCameraId = select.value;
+
+            if (scanner?.isScanning) {
+                await stop();
+                await start();
+            }
+        });
+
+        manualForm?.addEventListener('submit', function (event) {
+            event.preventDefault();
+            submit(manualToken?.value);
+        });
+
+        if (!isSecureCameraContext()) {
+            show(false, 'Kamera belum bisa dipakai.', 'Gunakan HTTPS untuk membuka kamera HP.');
+        } else {
+            show(true, 'Siap memindai.', 'Tekan Aktifkan Kamera. Sistem akan memilih kamera belakang otomatis.');
+        }
+    };
+})();
+
+/* === FINAL HARD FIX STUDENT SCANNER BACK CAMERA AND SUBMIT === */
+(function () {
+    function html(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function (char) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char];
+        });
+    }
+
+    function csrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.content || '';
+    }
+
+    function secureContextOk() {
+        return window.isSecureContext || ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+    }
+
+    window.studentScanner = function (url) {
+        const readerId = 'reader';
+        const feedback = document.getElementById('scan-feedback');
+        const startBtn = document.getElementById('camera-start');
+        const stopBtn = document.getElementById('camera-stop');
+        const switchBtn = document.getElementById('camera-switch');
+        const select = document.getElementById('camera-device');
+        const manualForm = document.getElementById('manual-form');
+        const manualToken = document.getElementById('manual-token');
+
+        let scanner = null;
+        let cameras = [];
+        let cameraIndex = 0;
+        let submitting = false;
+        let lastToken = '';
+        let lastTokenTime = 0;
+
+        function show(type, title, message = '') {
+            if (!feedback) return;
+
+            feedback.className = `scan-feedback ${type === 'success' ? 'success' : 'error'}`;
+            feedback.innerHTML = `
+                <div class="icon">${type === 'success' ? '✓' : '!'}</div>
+                <strong>${html(title)}</strong>
+                <span>${html(message)}</span>
+            `;
+        }
+
+        function isLikelyBackCamera(camera) {
+            const label = String(camera?.label || '').toLowerCase();
+            return label.includes('back')
+                || label.includes('rear')
+                || label.includes('environment')
+                || label.includes('belakang')
+                || label.includes('facing back')
+                || label.includes('camera2 0')
+                || label.includes('0, facing back');
+        }
+
+        function chooseBackCameraIndex(list) {
+            const index = list.findIndex(isLikelyBackCamera);
+            if (index >= 0) return index;
+
+            // Di banyak HP, kamera belakang muncul terakhir setelah permission.
+            if (list.length > 1) return list.length - 1;
+
+            return 0;
+        }
+
+        async function stopCamera(silent = false) {
+            try {
+                if (scanner?.isScanning) {
+                    await scanner.stop();
+                }
+            } catch (error) {
+                console.warn(error);
+            }
+
+            if (!silent) {
+                show('success', 'Kamera dihentikan.', 'Tekan Aktifkan Kamera untuk mulai lagi.');
+            }
+
+            if (startBtn) startBtn.disabled = false;
+            if (stopBtn) stopBtn.disabled = true;
+            if (switchBtn) switchBtn.disabled = cameras.length <= 1;
+        }
+
+        async function prepareCameras() {
+            if (!navigator.mediaDevices?.getUserMedia) {
+                throw new Error('Browser ini tidak mendukung akses kamera.');
+            }
+
+            // Minta permission dengan environment dulu supaya Android/iOS membuka daftar device lengkap.
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                    },
+                });
+
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                // Tetap lanjut, html5-qrcode akan coba minta permission.
+                console.warn('Warm permission gagal:', error);
+            }
+
+            cameras = await Html5Qrcode.getCameras();
+
+            if (!cameras.length) {
+                throw new Error('Kamera tidak ditemukan di perangkat ini.');
+            }
+
+            cameraIndex = chooseBackCameraIndex(cameras);
+
+            if (select) {
+                select.innerHTML = cameras.map(function (camera, index) {
+                    const label = camera.label || `Kamera ${index + 1}`;
+                    const suffix = index === cameraIndex ? ' — direkomendasikan' : '';
+
+                    return `<option value="${index}">${html(label + suffix)}</option>`;
+                }).join('');
+
+                select.value = String(cameraIndex);
+            }
+
+            if (switchBtn) {
+                switchBtn.disabled = cameras.length <= 1;
+            }
+        }
+
+        async function startCamera() {
+            if (!secureContextOk()) {
+                show('error', 'Kamera wajib HTTPS.', 'Buka dari https://absensi.badcoding.biz.id, bukan HTTP.');
+                return;
+            }
+
+            try {
+                if (startBtn) startBtn.disabled = true;
+
+                await prepareCameras();
+
+                scanner = scanner || new Html5Qrcode(readerId, { verbose: false });
+
+                const camera = cameras[cameraIndex];
+
+                show('success', 'Membuka kamera...', camera?.label || 'Mencoba kamera belakang');
+
+                try {
+                    // Cara paling stabil: pakai device id kamera belakang hasil enumerate.
+                    await scanner.start(
+                        { deviceId: { exact: camera.id } },
+                        {
+                            fps: 12,
+                            qrbox: { width: 270, height: 270 },
+                            aspectRatio: 1.0,
+                            disableFlip: false,
+                        },
+                        onScanSuccess,
+                        function () {}
+                    );
+                } catch (deviceError) {
+                    console.warn('deviceId gagal, fallback facingMode:', deviceError);
+
+                    // Fallback: paksa browser pilih kamera belakang.
+                    await scanner.start(
+                        { facingMode: { ideal: 'environment' } },
+                        {
+                            fps: 12,
+                            qrbox: { width: 270, height: 270 },
+                            aspectRatio: 1.0,
+                            disableFlip: false,
+                        },
+                        onScanSuccess,
+                        function () {}
+                    );
+                }
+
+                if (stopBtn) stopBtn.disabled = false;
+                if (switchBtn) switchBtn.disabled = cameras.length <= 1;
+
+                show('success', 'Kamera aktif.', 'Arahkan kamera ke QR Code guru sampai muncul pesan berhasil.');
+            } catch (error) {
+                console.error(error);
+
+                if (startBtn) startBtn.disabled = false;
+                if (stopBtn) stopBtn.disabled = true;
+
+                const message = String(error?.message || error || '');
+
+                if (/notallowed|permission|denied|izin/i.test(message)) {
+                    show('error', 'Izin kamera ditolak.', 'Buka pengaturan browser HP, izinkan kamera untuk situs ini, lalu refresh.');
+                } else if (/notfound|device|overconstrained/i.test(message)) {
+                    show('error', 'Kamera belakang belum bisa dipilih.', 'Tekan Ganti Kamera atau pilih kamera lain di dropdown.');
+                } else {
+                    show('error', 'Kamera gagal dibuka.', message || 'Refresh halaman lalu coba lagi.');
+                }
+            }
+        }
+
+        async function switchCamera() {
+            if (!cameras.length) {
+                await prepareCameras();
+            }
+
+            if (cameras.length <= 1) {
+                show('error', 'Tidak ada kamera lain.', 'Perangkat hanya menampilkan satu kamera ke browser.');
+                return;
+            }
+
+            cameraIndex = (cameraIndex + 1) % cameras.length;
+
+            if (select) {
+                select.value = String(cameraIndex);
+            }
+
+            await stopCamera(true);
+            await startCamera();
+        }
+
+        async function submitToken(token) {
+            token = String(token || '').trim();
+
+            if (!token) return;
+
+            const now = Date.now();
+
+            // Hindari spam scan token sama persis dalam 2 detik.
+            if (submitting || (token === lastToken && now - lastTokenTime < 2000)) {
+                return;
+            }
+
+            submitting = true;
+            lastToken = token;
+            lastTokenTime = now;
+
+            show('success', 'QR terbaca.', 'Mengirim absensi ke server...');
+
+            if (navigator.vibrate) {
+                navigator.vibrate(120);
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ token }),
+                });
+
+                const contentType = response.headers.get('content-type') || '';
+                const raw = await response.text();
+
+                let data = {};
+
+                if (contentType.includes('application/json')) {
+                    data = JSON.parse(raw || '{}');
+                } else {
+                    throw new Error('Server tidak mengembalikan JSON. Kemungkinan session login habis atau route salah.');
+                }
+
+                if (!response.ok || data.ok === false) {
+                    show('error', data.message || 'Absensi gagal.', 'Silakan scan ulang QR terbaru.');
+                    setTimeout(() => {
+                        submitting = false;
+                        lastToken = '';
+                    }, 1600);
+                    return;
+                }
+
+                show(
+                    'success',
+                    data.duplicate ? 'Absensi sudah tercatat.' : 'Absensi berhasil.',
+                    `${data.subject || 'Mata pelajaran'} • ${data.time || '-'} • ${data.status || '-'}`
+                );
+
+                // Pause scanner biar user tidak submit berkali-kali.
+                try {
+                    if (scanner?.isScanning) {
+                        await scanner.pause(true);
+                    }
+                } catch (error) {
+                    console.warn(error);
+                }
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1200);
+            } catch (error) {
+                console.error(error);
+
+                show('error', 'Absensi tidak terkirim.', error.message || 'Cek koneksi/login lalu coba lagi.');
+
+                setTimeout(() => {
+                    submitting = false;
+                    lastToken = '';
+                }, 1800);
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            submitToken(decodedText);
+        }
+
+        startBtn?.addEventListener('click', startCamera);
+        stopBtn?.addEventListener('click', () => stopCamera(false));
+        switchBtn?.addEventListener('click', switchCamera);
+
+        select?.addEventListener('change', async function () {
+            cameraIndex = Number(select.value || 0);
+
+            if (scanner?.isScanning) {
+                await stopCamera(true);
+                await startCamera();
+            }
+        });
+
+        manualForm?.addEventListener('submit', function (event) {
+            event.preventDefault();
+            submitToken(manualToken?.value);
+        });
+
+        if (!secureContextOk()) {
+            show('error', 'Kamera belum bisa dipakai.', 'Gunakan HTTPS agar browser HP mengizinkan kamera.');
+        } else {
+            show('success', 'Siap memindai.', 'Tekan Aktifkan Kamera. Jika masih kamera depan, tekan Ganti Kamera.');
+        }
+    };
+})();

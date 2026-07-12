@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\AccountSettingsController;
+
+use App\Http\Controllers\Auth\ForgotPasswordController;
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AccountController;
@@ -88,4 +92,32 @@ Route::middleware(['web', 'auth', 'role:admin'])
             ->name('teachers.show');
     });
 // BADCODING_TEACHER_DETAIL_ROUTE_END
+
+Route::get('/forgot-password/send', function () {
+    return redirect()
+        ->route('login')
+        ->with('forgot_error', 'Silakan gunakan tombol Lupa password dari halaman login.');
+})->name('password.forgot.redirect');
+
+Route::post('/forgot-password/send', [ForgotPasswordController::class, 'send'])
+    ->name('password.forgot.send');
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/akun/pengaturan', [AccountSettingsController::class, 'index'])->name('account.settings');
+    Route::put('/akun/pengaturan/password', [AccountSettingsController::class, 'updatePassword'])->name('account.settings.password');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Account Settings Routes
+|--------------------------------------------------------------------------
+*/
+\Illuminate\Support\Facades\Route::middleware(['auth'])->group(function () {
+    \Illuminate\Support\Facades\Route::get('/akun/pengaturan', [\App\Http\Controllers\AccountSettingsController::class, 'index'])
+        ->name('account.settings');
+
+    \Illuminate\Support\Facades\Route::put('/akun/pengaturan/password', [\App\Http\Controllers\AccountSettingsController::class, 'updatePassword'])
+        ->name('account.settings.password');
+});
 

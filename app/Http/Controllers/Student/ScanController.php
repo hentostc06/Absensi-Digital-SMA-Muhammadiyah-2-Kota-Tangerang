@@ -26,33 +26,40 @@ class ScanController extends Controller
     public function store(Request $request, DynamicQrService $qrService)
     {
         $data = $request->validate([
-            'token' => ['required', 'string', 'max:1200'],
+            'token' => ['required', 'string', 'max:2000'],
         ]);
 
         $student = $request->user()->student;
 
         if (! $student) {
-            return $this->fail('Akun siswa belum terhubung dengan data siswa.');
+            return $this->fail('Akun ini belum terhubung ke data siswa.', 422);
         }
 
         $payload = $this->readPayload($data['token']);
 
         if (! $payload) {
-            return $this->fail('Format QR Code tidak valid.');
+            return $this->fail('QR Code tidak valid. Pastikan yang discan adalah QR absensi dari guru.', 422);
         }
 
         $session = AttendanceSession::with(['schoolClass', 'subject'])->find((int) ($payload['sid'] ?? 0));
 
-        if (! $session || ! $session->isOpen()) {
-            return $this->fail('Sesi absensi tidak aktif atau telah ditutup.');
+        if (! $session) {
+            return $this->fail('Sesi absensi tidak ditemukan.', 404);
+        }
+
+        if (! $session->isOpen()) {
+            return $this->fail('Sesi absensi sudah ditutup.', 422);
         }
 
         if ((int) $student->school_class_id !== (int) $session->school_class_id) {
-            return $this->fail('QR Code ini bukan untuk kelas Anda.');
+            return $this->fail(
+                'QR ini untuk kelas '.$session->schoolClass->name.', sedangkan akun Anda bukan kelas tersebut.',
+                403
+            );
         }
 
         if (! $qrService->validate($data['token'], $session)) {
-            return $this->fail('QR Code kedaluwarsa. Silakan pindai kode terbaru.');
+            return $this->fail('QR Code sudah kedaluwarsa. Scan ulang QR terbaru yang tampil di layar guru.', 422);
         }
 
         try {
@@ -63,7 +70,10 @@ class ScanController extends Controller
                     ->first();
 
                 if ($existing) {
-                    return ['duplicate' => true, 'attendance' => $existing];
+                    return [
+                        'duplicate' => true,
+                        'attendance' => $existing,
+                    ];
                 }
 
                 $status = now()->greaterThan($session->opened_at->copy()->addMinutes($session->late_after_minutes))
@@ -80,18 +90,29 @@ class ScanController extends Controller
                     'user_agent' => substr((string) $request->userAgent(), 0, 500),
                 ]);
 
-                return ['duplicate' => false, 'attendance' => $attendance];
+                return [
+                    'duplicate' => false,
+                    'attendance' => $attendance,
+                ];
             });
         } catch (QueryException) {
-            return response()->json(['ok' => false, 'message' => 'Anda sudah melakukan absensi pada sesi ini.'], 409);
+            return $this->fail('Anda sudah melakukan absensi pada sesi ini.', 409);
         }
 
         if ($result['duplicate']) {
-            return response()->json(['ok' => false, 'message' => 'Anda sudah melakukan absensi pada sesi ini.'], 409);
+            return response()->json([
+                'ok' => true,
+                'duplicate' => true,
+                'message' => 'Anda sudah melakukan absensi pada sesi ini.',
+                'status' => $result['attendance']->status,
+                'subject' => $session->subject->name,
+                'time' => optional($result['attendance']->scanned_at)->format('H:i:s'),
+            ]);
         }
 
         return response()->json([
             'ok' => true,
+            'duplicate' => false,
             'message' => 'Absensi berhasil dicatat.',
             'status' => $result['attendance']->status,
             'subject' => $session->subject->name,
@@ -101,7 +122,7 @@ class ScanController extends Controller
 
     private function readPayload(string $token): ?array
     {
-        $parts = explode('.', $token);
+        $parts = explode('.', trim($token));
 
         if (count($parts) !== 2) {
             return null;
@@ -110,13 +131,21 @@ class ScanController extends Controller
         $encoded = $parts[0];
         $pad = str_repeat('=', (4 - strlen($encoded) % 4) % 4);
         $json = base64_decode(strtr($encoded.$pad, '-_', '+/'), true);
-        $payload = json_decode($json ?: '', true);
+
+        if (! $json) {
+            return null;
+        }
+
+        $payload = json_decode($json, true);
 
         return is_array($payload) ? $payload : null;
     }
 
-    private function fail(string $message)
+    private function fail(string $message, int $status = 422)
     {
-        return response()->json(['ok' => false, 'message' => $message], 422);
+        return response()->json([
+            'ok' => false,
+            'message' => $message,
+        ], $status);
     }
 }

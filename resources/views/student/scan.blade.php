@@ -7,7 +7,7 @@
     <div>
         <span class="section-kicker">ABSENSI SISWA</span>
         <h1>Scan QR Code</h1>
-        <p>Tekan tombol kamera, izinkan akses kamera browser, lalu arahkan kamera ke QR Code yang ditampilkan guru.</p>
+        <p>Gunakan kamera belakang HP untuk memindai QR Code yang ditampilkan guru. Setelah QR terbaca, sistem akan mengirim absensi otomatis.</p>
     </div>
 </div>
 
@@ -15,9 +15,11 @@
     <div class="card scanner-card">
         <div class="scanner-toolbar">
             <select id="camera-device" aria-label="Pilih kamera">
-                <option value="">Kamera belakang otomatis</option>
+                <option value="">Otomatis kamera belakang</option>
             </select>
+
             <button type="button" id="camera-start" class="btn primary">Aktifkan Kamera</button>
+            <button type="button" id="camera-switch" class="btn" disabled>Ganti Kamera</button>
             <button type="button" id="camera-stop" class="btn" disabled>Stop</button>
         </div>
 
@@ -28,13 +30,13 @@
         <div id="scan-feedback" class="scan-feedback">
             <div class="icon">i</div>
             <strong>Siap memindai</strong>
-            <span>Browser akan meminta izin kamera setelah tombol ditekan.</span>
+            <span>Tekan Aktifkan Kamera. Jika muncul izin kamera, pilih Izinkan.</span>
         </div>
 
         <details>
-            <summary>Masukkan token secara manual</summary>
+            <summary>Masukkan token manual untuk testing</summary>
             <form id="manual-form" class="form" style="margin-top:12px">
-                <textarea id="manual-token" placeholder="Tempel token QR Code di sini"></textarea>
+                <textarea id="manual-token" placeholder="Tempel isi QR/token di sini"></textarea>
                 <button type="submit" class="btn primary">Kirim Token</button>
             </form>
         </details>

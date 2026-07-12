@@ -42,6 +42,12 @@
                 <a href="{{ route('student.history') }}" class="sidebar-link {{ request()->routeIs('student.history') ? 'active' : '' }}"><span class="nav-icon">R</span><span>Riwayat Absensi</span></a>
             @endif
         </nav>
+                @auth
+                    <div class="account-settings-sidebar-wrap">
+                        @include('partials.account-settings-link')
+                    </div>
+                @endauth
+
 
         <div class="sidebar-footer">
             <div class="sidebar-user">
