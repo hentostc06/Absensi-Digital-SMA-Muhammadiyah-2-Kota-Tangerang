@@ -76,7 +76,7 @@
                     <button class="production-login-submit" type="submit">Login</button>
                 </form>
 
-                <p class="production-login-note">Skripsi Harnel Aikal Fairuz - 2026</p>
+                
             </div>
         </section>
     </main>
