@@ -3,10 +3,22 @@
 @section('title', 'Dashboard Guru')
 
 @section('content')
+@php
+    $teacherUser = auth()->user();
+    $teacherGender = strtolower((string) ($teacherUser->gender ?? ''));
+
+    $teacherGreeting = match ($teacherGender) {
+        'laki-laki' => 'Bapak',
+        'perempuan' => 'Ibu',
+        default => 'Bapak/Ibu',
+    };
+@endphp
+
+
 <section class="teacher-welcome-card">
     <div>
         <span class="section-kicker">Dashboard Guru</span>
-        <h1>Selamat datang, {{ $teacherTitle }} {{ auth()->user()->name }}</h1>
+        <h1>Selamat datang, {{ $teacherGreeting }} {{ auth()->user()->name }}</h1>
         <p>{{ $day }}, {{ now()->translatedFormat('d F Y') }}. Sistem otomatis membaca jadwal mengajar berdasarkan hari dan jam sekarang.</p>
     </div>
 
@@ -49,10 +61,11 @@
                 @csrf
                 <input type="hidden" name="schedule_id" value="{{ $suggestedSchedule->id }}">
                 <label>
-                    Batas status terlambat
+                    Batas Hadir Normal
                     <input type="number" name="late_after_minutes" value="5" min="0" max="120" required>
+                    <small class="teacher-late-help">Lewat dari batas ini, siswa tercatat terlambat.</small>
                 </label>
-                <button type="submit" class="btn primary">Buka Sesi & Generate QR</button>
+                <button type="submit" class="btn primary">Buka Sesi Absensi</button>
             </form>
         @else
             <h2>Tidak ada jadwal hari ini.</h2>
@@ -81,4 +94,31 @@
         </div>
     </section>
 </div>
+
+<!-- TEACHER DASHBOARD CLEAN DUPLICATE BADGE START -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cards = Array.from(document.querySelectorAll('section, article, div')).filter(function (el) {
+        return (el.textContent || '').includes('SEDANG BERLANGSUNG');
+    });
+
+    cards.forEach(function (card) {
+        const seen = new Set();
+
+        Array.from(card.querySelectorAll('span, b')).forEach(function (el) {
+            const value = (el.textContent || '').replace(/\s+/g, ' ').trim();
+
+            if (/^(X|XI|XII)\b/i.test(value)) {
+                if (seen.has(value)) {
+                    el.remove();
+                } else {
+                    seen.add(value);
+                }
+            }
+        });
+    });
+});
+</script>
+<!-- TEACHER DASHBOARD CLEAN DUPLICATE BADGE END -->
+
 @endsection

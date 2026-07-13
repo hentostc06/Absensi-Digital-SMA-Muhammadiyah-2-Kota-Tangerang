@@ -3,78 +3,132 @@
 @section('title', 'Pengaturan Akun')
 
 @section('content')
-    <div class="account-settings-page">
-        <div class="page-heading account-settings-heading">
+@php
+    $user = $user ?? auth()->user();
+
+    $teacher = method_exists($user, 'teacher') ? $user->teacher : null;
+    $student = method_exists($user, 'student') ? $user->student : null;
+
+    $phone = $user->phone
+        ?? $teacher->phone
+        ?? $teacher->phone_number
+        ?? $teacher->no_hp
+        ?? $student->phone
+        ?? $student->phone_number
+        ?? $student->no_hp
+        ?? '-';
+
+    $genderLabel = match ($user->gender ?? null) {
+        'laki-laki' => 'Laki-laki',
+        'perempuan' => 'Perempuan',
+        default => 'Belum diatur',
+    };
+@endphp
+
+<section class="account-page-head">
+    <span class="section-kicker">AKUN PENGGUNA</span>
+    <h1>Pengaturan Akun</h1>
+    <p>Lihat data akun dan ubah password secara mandiri.</p>
+</section>
+
+@if (session('success'))
+    <div class="account-alert success">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if ($errors->any())
+    <div class="account-alert error">
+        <strong>Periksa kembali data yang diisi.</strong>
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<section class="account-settings-grid">
+    <article class="account-card">
+        <header class="account-card-header">
+            <div class="account-card-icon">{{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}</div>
             <div>
-                <span class="section-kicker">Akun Pengguna</span>
-                <h1>Pengaturan Akun</h1>
-                <p>Lihat data akun dan ubah password secara mandiri.</p>
+                <h2>Data Diri</h2>
+                <p>Informasi akun yang tersimpan pada sistem.</p>
+            </div>
+        </header>
+
+        <div class="account-info-list">
+            <div class="account-info-row">
+                <span>Nama</span>
+                <strong>{{ $user->name }}</strong>
+            </div>
+
+            <div class="account-info-row">
+                <span>Username / NIS</span>
+                <strong>{{ $user->username }}</strong>
+            </div>
+
+            <div class="account-info-row">
+                <span>Email</span>
+                <strong>{{ $user->email ?? '-' }}</strong>
+            </div>
+
+            <div class="account-info-row">
+                <span>Jenis Kelamin</span>
+                <strong>{{ $genderLabel }}</strong>
+            </div>
+
+            <div class="account-info-row">
+                <span>Role</span>
+                <strong>{{ strtoupper($user->role) }}</strong>
+            </div>
+
+            <div class="account-info-row">
+                <span>Status Akun</span>
+                <strong>{{ $user->is_active ? 'Aktif' : 'Tidak aktif' }}</strong>
+            </div>
+
+            <div class="account-info-row">
+                <span>No. HP</span>
+                <strong>{{ $phone }}</strong>
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="alert success">{{ session('success') }}</div>
-        @endif
-
-        <div class="account-settings-grid">
-            <section class="account-settings-card">
-                <div class="account-settings-card-head">
-                    <div class="account-avatar-large">
-                        {{ strtoupper(substr($user->name ?? $user->username ?? 'U', 0, 1)) }}
-                    </div>
-                    <div>
-                        <h2>Data Diri</h2>
-                        <p>Informasi akun yang tersimpan pada sistem.</p>
-                    </div>
-                </div>
-
-                <div class="account-info-list">
-                    @foreach ($profileRows as $row)
-                        <div class="account-info-row">
-                            <span>{{ $row['label'] }}</span>
-                            <strong>{{ $row['value'] }}</strong>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
-
-            <section class="account-settings-card">
-                <div class="account-settings-card-head">
-                    <div class="account-avatar-large lock">🔒</div>
-                    <div>
-                        <h2>Ganti Password</h2>
-                        <p>Gunakan password baru minimal 8 karakter.</p>
-                    </div>
-                </div>
-
-                <form method="POST" action="{{ route('account.settings.password') }}" class="account-password-form">
-                    @csrf
-                    @method('PUT')
-
-                    <label>
-                        <span>Password Lama</span>
-                        <input type="password" name="current_password" required autocomplete="current-password">
-                        @error('current_password')
-                            <small>{{ $message }}</small>
-                        @enderror
-                    </label>
-
-                    <label>
-                        <span>Password Baru</span>
-                        <input type="password" name="password" required autocomplete="new-password">
-                        @error('password')
-                            <small>{{ $message }}</small>
-                        @enderror
-                    </label>
-
-                    <label>
-                        <span>Konfirmasi Password Baru</span>
-                        <input type="password" name="password_confirmation" required autocomplete="new-password">
-                    </label>
-
-                    <button type="submit">Simpan Password Baru</button>
-                </form>
-            </section>
+        <div class="account-readonly-note">
+            Jenis kelamin hanya dapat diubah oleh admin melalui data guru atau data siswa.
         </div>
-    </div>
+    </article>
+
+    <article class="account-card">
+        <header class="account-card-header">
+            <div class="account-card-icon lock-icon">🔐</div>
+            <div>
+                <h2>Ganti Password</h2>
+                <p>Gunakan password baru minimal 8 karakter.</p>
+            </div>
+        </header>
+
+        <form method="POST" action="{{ route('account.settings.password') }}" class="account-password-form">
+            @csrf
+
+            <label>
+                <span>Password Lama</span>
+                <input type="password" name="current_password" autocomplete="current-password">
+            </label>
+
+            <label>
+                <span>Password Baru</span>
+                <input type="password" name="password" autocomplete="new-password">
+            </label>
+
+            <label>
+                <span>Konfirmasi Password Baru</span>
+                <input type="password" name="password_confirmation" autocomplete="new-password">
+            </label>
+
+            <button type="submit">Simpan Password Baru</button>
+        </form>
+    </article>
+</section>
 @endsection

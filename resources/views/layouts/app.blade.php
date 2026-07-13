@@ -68,10 +68,10 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="logout-button">Keluar</button>
-            </form>
+            <form method="POST" action="{{ route('logout') }}" class="sidebar-logout-form">
+    @csrf
+    <button type="submit" class="sidebar-logout-button">Keluar</button>
+</form>
         </div>
     </aside>
 

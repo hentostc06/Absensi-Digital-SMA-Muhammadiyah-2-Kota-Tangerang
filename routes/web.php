@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\LogoutController;
+
 use App\Http\Controllers\AccountSettingsController;
 
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -141,3 +143,22 @@ Route::middleware(['web', 'auth', 'role:siswa'])
             ->name('schedule');
     });
 // BADCODING_MY_SCHEDULE_ROUTES_END
+
+
+// BADCODING_LOGOUT_FIX_START
+Route::post('/logout', [LogoutController::class, 'destroy'])
+    ->middleware('web')
+    ->name('logout');
+
+Route::get('/logout', function () {
+    return redirect()->route('login');
+})->middleware('web');
+// BADCODING_LOGOUT_FIX_END
+
+
+// BADCODING_ACCOUNT_GENDER_ROUTE_START
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::post('/akun/pengaturan/profile', [\App\Http\Controllers\AccountSettingsController::class, 'updateProfile'])
+        ->name('account.settings.profile');
+});
+// BADCODING_ACCOUNT_GENDER_ROUTE_END

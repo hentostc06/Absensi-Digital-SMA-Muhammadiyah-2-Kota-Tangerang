@@ -85,57 +85,100 @@ class SessionController extends Controller
         ));
     }
 
-    public function store(Request $request)
+
+    public function store(\Illuminate\Http\Request $request)
     {
         $teacher = $request->user()->teacher;
 
+        if (! $teacher) {
+            abort(403);
+        }
+
         $data = $request->validate([
-            'schedule_id' => ['nullable', 'exists:schedules,id'],
+            'schedule_id' => ['required', 'integer'],
             'late_after_minutes' => ['nullable', 'integer', 'min:1', 'max:120'],
             'session_duration_minutes' => ['nullable', 'integer', 'min:5', 'max:120'],
-            'mode' => ['nullable', 'in:auto,manual'],
         ]);
 
-        $schedule = null;
-
-        if (filled($data['schedule_id'] ?? null)) {
-            $schedule = Schedule::with(['schoolClass', 'subject'])
-                ->where('teacher_id', $teacher->id)
-                ->where('is_active', true)
-                ->findOrFail($data['schedule_id']);
-        } else {
-            $schedule = $this->autoScheduleFor($teacher->id);
-        }
+        $schedule = \App\Models\Schedule::with(['subject', 'schoolClass'])
+            ->where('teacher_id', $teacher->id)
+            ->where('id', $data['schedule_id'])
+            ->where('is_active', true)
+            ->first();
 
         if (! $schedule) {
-            return back()->with('error', 'Tidak ada jadwal yang bisa dibuka. Gunakan Mode Testing untuk memilih jadwal manual.');
+            return back()
+                ->withInput()
+                ->withErrors(['schedule_id' => 'Jadwal tidak ditemukan atau bukan jadwal mengajar Anda.']);
         }
 
-        $session = DB::transaction(function () use ($teacher, $schedule, $data) {
-            AttendanceSession::where('teacher_id', $teacher->id)
-                ->where('status', 'open')
-                ->update([
-                    'status' => 'closed',
-                    'closed_at' => now(),
-                ]);
+        $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $todayName = $dayNames[((int) now()->format('N')) - 1] ?? 'Senin';
 
-            return AttendanceSession::create([
-                'uuid' => (string) Str::uuid(),
-                'schedule_id' => $schedule->id,
-                'teacher_id' => $teacher->id,
-                'school_class_id' => $schedule->school_class_id,
-                'subject_id' => $schedule->subject_id,
-                'opened_at' => now(),
-                'status' => 'open',
-                'late_after_minutes' => (int) ($data['late_after_minutes'] ?? 5),
-            'session_duration_minutes' => (int) ($data['session_duration_minutes'] ?? 15),
-                'token_version' => 1,
-            ]);
-        });
+        if ((string) $schedule->day_of_week !== $todayName) {
+            return back()
+                ->withInput()
+                ->withErrors(['schedule_id' => 'Sesi hanya dapat dibuka pada hari sesuai jadwal.']);
+        }
+
+        $startAt = \Illuminate\Support\Carbon::parse(now()->toDateString() . ' ' . substr((string) $schedule->start_time, 0, 8));
+        $endAt = \Illuminate\Support\Carbon::parse(now()->toDateString() . ' ' . substr((string) $schedule->end_time, 0, 8));
+
+        if (now()->lt($startAt)) {
+            return back()
+                ->withInput()
+                ->withErrors(['schedule_id' => 'Sesi belum bisa dibuka. Jadwal dimulai pukul ' . $startAt->format('H:i') . ' WIB.']);
+        }
+
+        if (now()->gt($endAt)) {
+            return back()
+                ->withInput()
+                ->withErrors(['schedule_id' => 'Sesi tidak bisa dibuka karena jam pelajaran sudah selesai.']);
+        }
+
+        $openSession = \App\Models\AttendanceSession::where('teacher_id', $teacher->id)
+            ->where('status', 'open')
+            ->whereNull('closed_at')
+            ->latest('opened_at')
+            ->first();
+
+        if ($openSession && $openSession->isOpen()) {
+            return redirect()->route('teacher.sessions.show', $openSession)
+                ->with('success', 'Masih ada sesi absensi aktif.');
+        }
+
+        $payload = [
+            'schedule_id' => $schedule->id,
+            'teacher_id' => $teacher->id,
+            'school_class_id' => $schedule->school_class_id,
+            'subject_id' => $schedule->subject_id,
+            'opened_at' => now(),
+            'closed_at' => null,
+            'status' => 'open',
+            'late_after_minutes' => (int) ($data['late_after_minutes'] ?? 5),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('attendance_sessions', 'uuid')) {
+            $payload['uuid'] = (string) \Illuminate\Support\Str::uuid();
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('attendance_sessions', 'session_duration_minutes')) {
+            $payload['session_duration_minutes'] = (int) ($data['session_duration_minutes'] ?? 15);
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('attendance_sessions', 'token_version')) {
+            $payload['token_version'] = 1;
+        }
+
+        $sessionId = \Illuminate\Support\Facades\DB::table('attendance_sessions')->insertGetId($payload);
+        $session = \App\Models\AttendanceSession::findOrFail($sessionId);
 
         return redirect()->route('teacher.sessions.show', $session)
             ->with('success', 'Sesi absensi berhasil dibuka.');
     }
+
 
     public function show(AttendanceSession $session)
     {

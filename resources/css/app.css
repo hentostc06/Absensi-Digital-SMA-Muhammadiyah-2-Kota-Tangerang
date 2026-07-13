@@ -7655,3 +7655,733 @@ svg#projector-countdown-ring #projector-countdown {
         font-size: 27px !important;
     }
 }
+
+/* === LOGOUT 419 FIX BUTTON FINAL === */
+
+.sidebar-logout-form {
+    width: 100% !important;
+    margin: 10px 0 0 !important;
+    padding: 0 !important;
+}
+
+.sidebar-logout-button {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+
+    width: 100% !important;
+    min-height: 48px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin: 0 !important;
+    padding: 0 16px !important;
+
+    border: 1px solid rgba(255,255,255,.18) !important;
+    border-radius: 14px !important;
+
+    color: #ffffff !important;
+    background: rgba(255,255,255,.10) !important;
+    box-shadow: none !important;
+
+    cursor: pointer !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+}
+
+.sidebar-logout-button:hover {
+    background: rgba(255,255,255,.16) !important;
+    border-color: rgba(255,255,255,.26) !important;
+}
+
+/* === GENDER ADMIN ONLY AND GREETING FINAL === */
+
+.account-readonly-note {
+    margin: 16px 0 0 !important;
+    padding: 13px 15px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 14px !important;
+    color: #53657f !important;
+    background: #f8fbff !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    font-weight: 750 !important;
+}
+
+.admin-gender-field {
+    display: grid !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+}
+
+.admin-gender-field span {
+    color: #082455 !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+}
+
+.admin-gender-field select {
+    width: 100% !important;
+    min-height: 46px !important;
+    padding: 0 14px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 14px !important;
+    color: #082455 !important;
+    background: #ffffff !important;
+    font-weight: 800 !important;
+    outline: none !important;
+}
+
+/* === TEACHER DASHBOARD GREETING COPY FINAL === */
+
+.teacher-late-help {
+    display: block !important;
+    margin-top: 6px !important;
+    color: #667085 !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    font-weight: 750 !important;
+}
+
+.dashboard-teacher-card label,
+.teacher-dashboard-card label,
+form label {
+    color: #082455;
+}
+
+form label:has(input[name="late_after_minutes"]) {
+    display: grid !important;
+    gap: 6px !important;
+}
+
+form input[name="late_after_minutes"] {
+    min-height: 46px !important;
+    border-radius: 14px !important;
+    font-weight: 900 !important;
+}
+
+@supports selector(:has(*)) {
+    form:has(input[name="late_after_minutes"]) button[type="submit"] {
+        min-height: 46px !important;
+        border-radius: 14px !important;
+        font-weight: 950 !important;
+    }
+}
+
+/* === ACCOUNT SETTINGS CLEAN UI AND TEACHER TEXT FINAL === */
+
+/* Header halaman pengaturan akun */
+.account-page-head {
+    margin: 0 0 22px !important;
+}
+
+.account-page-head h1 {
+    margin: 6px 0 8px !important;
+    color: #082455 !important;
+    font-size: clamp(28px, 3vw, 42px) !important;
+    line-height: 1.12 !important;
+    font-weight: 950 !important;
+}
+
+.account-page-head p {
+    margin: 0 !important;
+    color: #53657f !important;
+    font-size: 15px !important;
+    line-height: 1.65 !important;
+    font-weight: 650 !important;
+}
+
+/* Layout dua card */
+.account-settings-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.05fr) minmax(360px, .9fr) !important;
+    gap: 22px !important;
+    align-items: start !important;
+}
+
+.account-card {
+    padding: 24px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 24px !important;
+    background: #ffffff !important;
+    box-shadow: 0 18px 44px rgba(8, 36, 85, .07) !important;
+}
+
+.account-card-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    margin: 0 0 18px !important;
+}
+
+.account-card-icon {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 18px !important;
+    color: #082455 !important;
+    background: #f6c344 !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+}
+
+.account-card-icon.lock-icon {
+    font-size: 20px !important;
+}
+
+.account-card-header h2 {
+    margin: 0 !important;
+    color: #082455 !important;
+    font-size: 24px !important;
+    line-height: 1.15 !important;
+    font-weight: 950 !important;
+}
+
+.account-card-header p {
+    margin: 4px 0 0 !important;
+    color: #53657f !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    font-weight: 650 !important;
+}
+
+/* Data diri */
+.account-info-list {
+    display: grid !important;
+    gap: 10px !important;
+}
+
+.account-info-row {
+    display: grid !important;
+    grid-template-columns: 180px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    align-items: center !important;
+    min-height: 54px !important;
+    padding: 13px 16px !important;
+    border: 1px solid #e5edf7 !important;
+    border-radius: 16px !important;
+    background: #f8fbff !important;
+}
+
+.account-info-row span {
+    color: #53657f !important;
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    font-weight: 900 !important;
+}
+
+.account-info-row strong {
+    min-width: 0 !important;
+    color: #082455 !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    font-weight: 950 !important;
+    overflow-wrap: anywhere !important;
+}
+
+/* Catatan readonly */
+.account-readonly-note {
+    margin: 16px 0 0 !important;
+    padding: 13px 15px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 14px !important;
+    color: #53657f !important;
+    background: #f8fbff !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    font-weight: 750 !important;
+}
+
+/* Form password */
+.account-password-form {
+    display: grid !important;
+    gap: 16px !important;
+}
+
+.account-password-form label {
+    display: grid !important;
+    gap: 8px !important;
+}
+
+.account-password-form label span {
+    color: #082455 !important;
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    font-weight: 900 !important;
+}
+
+.account-password-form input {
+    width: 100% !important;
+    min-height: 50px !important;
+    padding: 0 14px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 14px !important;
+    color: #082455 !important;
+    background: #ffffff !important;
+    outline: none !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+}
+
+.account-password-form input:focus {
+    border-color: #f6c344 !important;
+    box-shadow: 0 0 0 4px rgba(246, 195, 68, .18) !important;
+}
+
+.account-password-form button {
+    min-height: 52px !important;
+    padding: 0 18px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    color: #082455 !important;
+    background: #f6c344 !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+}
+
+.account-alert {
+    margin: 0 0 18px !important;
+    padding: 14px 16px !important;
+    border-radius: 16px !important;
+    font-weight: 800 !important;
+}
+
+.account-alert.success {
+    color: #067647 !important;
+    background: #ecfdf3 !important;
+    border: 1px solid #abefc6 !important;
+}
+
+.account-alert.error {
+    color: #b42318 !important;
+    background: #fff1f3 !important;
+    border: 1px solid #fecdd3 !important;
+}
+
+.account-alert ul {
+    margin: 8px 0 0 18px !important;
+    padding: 0 !important;
+}
+
+/* Rapihkan card Jadwal Senin di dashboard guru */
+.teacher-schedule-card,
+.dashboard-schedule-card,
+.schedule-today-card,
+.card:has(.schedule-list),
+.card:has(.schedule-item) {
+    overflow: hidden !important;
+}
+
+.card h2,
+.card h3,
+.card h4 {
+    line-height: 1.25 !important;
+}
+
+.card p {
+    line-height: 1.55 !important;
+}
+
+/* Target card jadwal yang ada teks Jadwal Senin */
+@supports selector(:has(*)) {
+    .card:has(.schedule-item) > header,
+    .card:has(.schedule-list) > header,
+    article:has(.schedule-item) > header,
+    section:has(.schedule-item) > header {
+        padding-bottom: 12px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .card:has(.schedule-item) h2,
+    .card:has(.schedule-item) h3,
+    .card:has(.schedule-list) h2,
+    .card:has(.schedule-list) h3 {
+        margin: 0 0 6px !important;
+        color: #082455 !important;
+        font-size: 18px !important;
+        line-height: 1.25 !important;
+        font-weight: 950 !important;
+    }
+
+    .card:has(.schedule-item) p,
+    .card:has(.schedule-list) p {
+        margin: 0 0 12px !important;
+        color: #53657f !important;
+        font-size: 14px !important;
+        line-height: 1.55 !important;
+        font-weight: 650 !important;
+    }
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+    .account-settings-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .account-card {
+        padding: 18px !important;
+        border-radius: 20px !important;
+    }
+
+    .account-info-row {
+        grid-template-columns: 1fr !important;
+        gap: 5px !important;
+        align-items: start !important;
+    }
+
+    .account-card-header {
+        align-items: flex-start !important;
+    }
+}
+
+/* === TEACHER MANUAL SESSION PROFESSIONAL FINAL === */
+
+.teacher-session-hero,
+.teacher-session-card,
+.teacher-manual-session-card,
+.teacher-schedule-list-card,
+.teacher-active-session-banner,
+.teacher-session-alert {
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 24px !important;
+    background: #ffffff !important;
+    box-shadow: 0 18px 44px rgba(8, 36, 85, .07) !important;
+}
+
+.teacher-session-hero {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    align-items: center !important;
+    padding: 26px !important;
+    margin-bottom: 22px !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%) !important;
+}
+
+.teacher-session-hero h1 {
+    margin: 6px 0 8px !important;
+    color: #082455 !important;
+    font-size: clamp(30px, 3vw, 44px) !important;
+    line-height: 1.1 !important;
+    font-weight: 950 !important;
+}
+
+.teacher-session-hero p {
+    margin: 0 !important;
+    color: #53657f !important;
+    line-height: 1.65 !important;
+    font-weight: 650 !important;
+}
+
+.teacher-session-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.1fr) minmax(380px, .9fr) !important;
+    gap: 22px !important;
+    align-items: stretch !important;
+    margin-bottom: 22px !important;
+}
+
+.teacher-session-card,
+.teacher-manual-session-card {
+    padding: 26px !important;
+}
+
+.teacher-session-card {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 330px !important;
+    gap: 24px !important;
+}
+
+.teacher-session-card h2,
+.teacher-manual-session-card h2 {
+    margin: 8px 0 14px !important;
+    color: #082455 !important;
+    font-size: clamp(28px, 3vw, 40px) !important;
+    line-height: 1.08 !important;
+    font-weight: 950 !important;
+}
+
+.teacher-manual-session-card h2 {
+    font-size: clamp(26px, 2.5vw, 36px) !important;
+}
+
+.teacher-session-card p,
+.teacher-manual-session-card p {
+    margin: 14px 0 0 !important;
+    color: #53657f !important;
+    font-size: 15px !important;
+    line-height: 1.65 !important;
+    font-weight: 650 !important;
+}
+
+.teacher-manual-session-card {
+    border-color: rgba(246, 195, 68, .75) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #fffaf0 100%) !important;
+}
+
+.teacher-session-badges {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+}
+
+.teacher-session-badges span {
+    padding: 10px 14px !important;
+    border-radius: 999px !important;
+    color: #082455 !important;
+    background: #edf4ff !important;
+    border: 1px solid #dbe5f1 !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+}
+
+.teacher-session-badges span:first-child {
+    background: #f6c344 !important;
+    border-color: #f6c344 !important;
+}
+
+.teacher-session-form,
+.teacher-manual-session-form {
+    display: grid !important;
+    gap: 14px !important;
+    align-content: center !important;
+}
+
+.teacher-manual-session-form {
+    margin-top: 18px !important;
+}
+
+.teacher-session-form label,
+.teacher-manual-session-form label {
+    display: grid !important;
+    gap: 7px !important;
+}
+
+.teacher-session-form label span,
+.teacher-manual-session-form label span {
+    color: #082455 !important;
+    font-size: 13px !important;
+    font-weight: 950 !important;
+}
+
+.teacher-session-form label small {
+    color: #667085 !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    font-weight: 750 !important;
+}
+
+.teacher-session-form input,
+.teacher-manual-session-form input,
+.teacher-manual-session-form select {
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 0 14px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 14px !important;
+    color: #082455 !important;
+    background: #ffffff !important;
+    font-weight: 900 !important;
+    outline: none !important;
+}
+
+.teacher-session-form button,
+.teacher-manual-session-form button {
+    min-height: 52px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    color: #082455 !important;
+    background: #f6c344 !important;
+    cursor: pointer !important;
+    font-weight: 950 !important;
+}
+
+.teacher-session-form button:disabled,
+.teacher-manual-session-form button:disabled {
+    color: #667085 !important;
+    background: #e8eef7 !important;
+    cursor: not-allowed !important;
+}
+
+.teacher-manual-session-note {
+    padding: 12px 14px !important;
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 14px !important;
+    color: #53657f !important;
+    background: #f8fbff !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    font-weight: 800 !important;
+}
+
+.teacher-manual-session-note.success {
+    color: #067647 !important;
+    background: #ecfdf3 !important;
+    border-color: #abefc6 !important;
+}
+
+.teacher-manual-session-note.warning {
+    color: #b54708 !important;
+    background: #fffaeb !important;
+    border-color: #fedf89 !important;
+}
+
+.teacher-session-primary-link,
+.teacher-active-session-banner a {
+    min-height: 44px !important;
+    padding: 0 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 14px !important;
+    color: #082455 !important;
+    background: #f6c344 !important;
+    text-decoration: none !important;
+    font-weight: 950 !important;
+}
+
+.teacher-active-session-banner {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 18px !important;
+    padding: 14px 18px !important;
+    background: #f8fbff !important;
+}
+
+.teacher-active-session-banner a {
+    margin-left: auto !important;
+}
+
+.teacher-session-history {
+    padding: 22px !important;
+}
+
+.teacher-session-history h2 {
+    margin: 0 0 4px !important;
+    color: #082455 !important;
+    font-size: 18px !important;
+    font-weight: 950 !important;
+}
+
+.teacher-session-history p {
+    margin: 0 0 16px !important;
+    color: #53657f !important;
+}
+
+.teacher-session-alert {
+    margin-bottom: 18px !important;
+    padding: 14px 16px !important;
+    font-weight: 800 !important;
+}
+
+.teacher-session-alert.error {
+    color: #b42318 !important;
+    background: #fff1f3 !important;
+    border-color: #fecdd3 !important;
+}
+
+.teacher-session-alert.success {
+    color: #067647 !important;
+    background: #ecfdf3 !important;
+    border-color: #abefc6 !important;
+}
+
+.teacher-session-alert ul {
+    margin: 8px 0 0 18px !important;
+    padding: 0 !important;
+}
+
+@media (max-width: 1100px) {
+    .teacher-session-grid,
+    .teacher-session-card {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 680px) {
+    .teacher-session-hero {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .teacher-active-session-banner {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .teacher-active-session-banner a {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* === TEACHER SESSION MINUTE INPUT FINAL === */
+
+.teacher-minute-input {
+    width: 100% !important;
+    min-height: 48px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    overflow: hidden !important;
+
+    border: 1px solid #dbe5f1 !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+}
+
+.teacher-minute-input input {
+    width: 100% !important;
+    min-height: 48px !important;
+    height: 48px !important;
+
+    margin: 0 !important;
+    padding: 0 14px !important;
+
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+
+    color: #082455 !important;
+    font-size: 14px !important;
+    font-weight: 950 !important;
+}
+
+.teacher-minute-input span {
+    height: 48px !important;
+    min-width: 70px !important;
+    padding: 0 14px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-left: 1px solid #e5edf7 !important;
+    color: #53657f !important;
+    background: #f8fbff !important;
+
+    font-size: 13px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+}
+
+.teacher-minute-input:focus-within {
+    border-color: #f6c344 !important;
+    box-shadow: 0 0 0 4px rgba(246, 195, 68, .18) !important;
+}
