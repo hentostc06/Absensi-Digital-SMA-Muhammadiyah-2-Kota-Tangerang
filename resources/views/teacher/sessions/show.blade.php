@@ -86,9 +86,12 @@
         </div>
 
         <div class="qr-footer-panel">
-            <div class="countdown-ring" id="countdown-ring">
-                <strong id="countdown">30</strong>
-            </div>
+            <svg id="countdown-ring" class="qr-countdown-svg" viewBox="0 0 100 100" aria-label="Countdown refresh QR">
+    <circle class="qr-countdown-bg" cx="50" cy="50" r="40"></circle>
+    <circle id="countdown-progress" class="qr-countdown-progress" cx="50" cy="50" r="40"></circle>
+    <circle class="qr-countdown-inner" cx="50" cy="50" r="31"></circle>
+    <text id="countdown" class="qr-countdown-number" x="50" y="53" text-anchor="middle">30</text>
+</svg>
 
             <div class="qr-footer-text">
                 <strong>QR Code diperbarui otomatis</strong>
@@ -173,9 +176,12 @@
         </main>
 
         <footer class="qr-projector-footer">
-            <div class="qr-projector-countdown" id="projector-countdown-ring">
-                <strong id="projector-countdown">30</strong>
-            </div></footer>
+            <svg id="projector-countdown-ring" class="qr-projector-countdown-svg" viewBox="0 0 100 100" aria-label="Countdown refresh QR">
+    <circle class="qr-projector-countdown-bg" cx="50" cy="50" r="40"></circle>
+    <circle id="projector-countdown-progress" class="qr-projector-countdown-progress" cx="50" cy="50" r="40"></circle>
+    <circle class="qr-projector-countdown-inner" cx="50" cy="50" r="31"></circle>
+    <text id="projector-countdown" class="qr-projector-countdown-number" x="50" y="53" text-anchor="middle">30</text>
+</svg></footer>
     </div>
 </div>
 @endsection

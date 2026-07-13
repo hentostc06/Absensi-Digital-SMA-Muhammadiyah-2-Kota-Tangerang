@@ -36,11 +36,19 @@
                 <a href="{{ route('admin.schedules.index') }}" class="sidebar-link {{ request()->routeIs('admin.schedules.*') ? 'active' : '' }}"><span class="nav-icon">J</span><span>Jadwal Pelajaran</span></a>
                 <a href="{{ route('admin.reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"><span class="nav-icon">L</span><span>Laporan Absensi</span></a>
             @elseif (auth()->user()->role === 'guru')
-                <a href="{{ route('teacher.sessions.index') }}" class="sidebar-link {{ request()->routeIs('teacher.sessions.*') ? 'active' : '' }}"><span class="nav-icon">QR</span><span>Sesi QR Code</span></a>
+                <a href="{{ route('teacher.sessions.index') }}"
+   class="sidebar-link sidebar-qr-link {{ request()->routeIs('teacher.sessions.*') ? 'active' : '' }}">
+    <span class="nav-icon" aria-hidden="true"></span>
+    <span>Sesi QR Code</span>
+</a>
                 <a href="{{ route('teacher.schedule') }}" class="sidebar-link {{ request()->routeIs('teacher.schedule') ? 'active' : '' }}"><span class="nav-icon">J</span><span>Jadwal Saya</span></a>
             @elseif (auth()->user()->role === 'siswa')
                 <a href="{{ route('student.schedule') }}" class="sidebar-link {{ request()->routeIs('student.schedule') ? 'active' : '' }}"><span class="nav-icon">J</span><span>Jadwal Saya</span></a>
-                <a href="{{ route('student.scan') }}" class="sidebar-link {{ request()->routeIs('student.scan') ? 'active' : '' }}"><span class="nav-icon">QR</span><span>Scan QR Code</span></a>
+                <a href="{{ route('student.scan') }}"
+   class="sidebar-link sidebar-qr-link {{ request()->routeIs('student.scan*') ? 'active' : '' }}">
+    <span class="nav-icon" aria-hidden="true"></span>
+    <span>Scan QR Code</span>
+</a>
                 <a href="{{ route('student.history') }}" class="sidebar-link {{ request()->routeIs('student.history') ? 'active' : '' }}"><span class="nav-icon">R</span><span>Riwayat Absensi</span></a>
             @endif
         </nav>

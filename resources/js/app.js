@@ -2045,3 +2045,41 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 })();
 
+/* === REAL SVG QR TIMER PROGRESS FINAL === */
+(function () {
+    const CIRCUMFERENCE = 2 * Math.PI * 40;
+
+    function getNumber(id, fallback = 30) {
+        const el = document.getElementById(id);
+        const raw = el ? el.textContent : '';
+        const n = parseInt(String(raw).replace(/\D+/g, ''), 10);
+
+        return Number.isFinite(n) ? Math.max(0, Math.min(30, n)) : fallback;
+    }
+
+    function syncSvgTimer(numberId, progressId) {
+        const number = document.getElementById(numberId);
+        const progress = document.getElementById(progressId);
+
+        if (!number || !progress) {
+            return;
+        }
+
+        const value = getNumber(numberId, 30);
+        const offset = CIRCUMFERENCE - ((value / 30) * CIRCUMFERENCE);
+
+        number.textContent = String(value);
+        progress.style.strokeDasharray = String(CIRCUMFERENCE);
+        progress.style.strokeDashoffset = String(offset);
+    }
+
+    function syncAllTimers() {
+        syncSvgTimer('countdown', 'countdown-progress');
+        syncSvgTimer('projector-countdown', 'projector-countdown-progress');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        syncAllTimers();
+        setInterval(syncAllTimers, 150);
+    });
+})();
