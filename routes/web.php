@@ -162,3 +162,40 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('account.settings.profile');
 });
 // BADCODING_ACCOUNT_GENDER_ROUTE_END
+
+
+// BADCODING_TEACHER_SCHEDULE_ROUTE_FIX_START
+Route::middleware(['web', 'auth', 'role:guru'])->group(function () {
+    Route::get('/guru/jadwal-saya', [\App\Http\Controllers\MyScheduleController::class, 'index'])
+        ->name('teacher.schedule');
+
+    Route::get('/guru/jadwal-saya', [\App\Http\Controllers\MyScheduleController::class, 'index'])
+        ->name('teacher.schedule.index');
+});
+// BADCODING_TEACHER_SCHEDULE_ROUTE_FIX_END
+
+
+// BADCODING_JADWAL_SAYA_FALLBACK_START
+Route::middleware(['web', 'auth', 'role:guru'])->get('/guru/jadwal-saya', function () {
+    $user = auth()->user();
+    $teacher = $user?->teacher;
+
+    if (! $teacher) {
+        abort(403);
+    }
+
+    $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    $todayName = $days[((int) now()->format('N')) - 1] ?? 'Senin';
+
+    $schedules = \App\Models\Schedule::with(['subject', 'schoolClass'])
+        ->where('teacher_id', $teacher->id)
+        ->where('is_active', true)
+        ->orderByRaw("CASE day_of_week WHEN 'Senin' THEN 1 WHEN 'Selasa' THEN 2 WHEN 'Rabu' THEN 3 WHEN 'Kamis' THEN 4 WHEN 'Jumat' THEN 5 WHEN 'Sabtu' THEN 6 ELSE 7 END")
+        ->orderBy('start_time')
+        ->get();
+
+    return view()->exists('schedules.index')
+        ? view('schedules.index', compact('schedules', 'todayName'))
+        : view('teacher.schedules.index', compact('schedules', 'todayName'));
+})->name('teacher.schedule');
+// BADCODING_JADWAL_SAYA_FALLBACK_END

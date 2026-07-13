@@ -44,7 +44,7 @@
     }
 
     $hasOpenSession = ($openSession ?? null) && $openSession->isOpen();
-    $manualOverrideEnabled = filter_var(env('ABSENSI_MANUAL_OVERRIDE', false), FILTER_VALIDATE_BOOLEAN);
+    $manualOverrideEnabled = filter_var(config('absensi.manual_override', false), FILTER_VALIDATE_BOOLEAN);
 @endphp
 
 <section class="teacher-session-hero">
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!select || !button || !note) return;
 
     const hasOpenSession = @json($hasOpenSession);
-    const manualOverrideEnabled = @json($manualOverrideEnabled);
+    const manualOverrideEnabled = @json((bool) $manualOverrideEnabled);
 
     function syncManualButton() {
         const option = select.options[select.selectedIndex];
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!canOpen && !manualOverrideEnabled) {
             button.disabled = true;
-            note.textContent = 'Jadwal ini belum dimulai atau sudah selesai. Sesi hanya dapat dibuka pada jam pelajaran berlangsung.';
+            note.textContent = 'Jadwal ini belum dimulai atau sudah selesai. Mode manual hanya aktif jika izin uji coba manual dinyalakan.';
             note.className = 'teacher-manual-session-note warning';
             return;
         }
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
             note.textContent = 'Jadwal sedang berlangsung. Sesi absensi dapat dibuka.';
             note.className = 'teacher-manual-session-note success';
         } else {
-            note.textContent = 'Mode uji coba lokal aktif. Sesi manual tetap dapat dibuka untuk kebutuhan testing.';
+            note.textContent = 'Mode manual sementara aktif. Sesi dapat dibuka untuk kebutuhan uji coba.';
             note.className = 'teacher-manual-session-note success';
         }
     }

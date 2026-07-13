@@ -41,7 +41,7 @@
     <span class="nav-icon" aria-hidden="true"></span>
     <span>Sesi QR Code</span>
 </a>
-                <a href="{{ route('teacher.schedule') }}" class="sidebar-link {{ request()->routeIs('teacher.schedule') ? 'active' : '' }}"><span class="nav-icon">J</span><span>Jadwal Saya</span></a>
+                <a href="{{ url('/guru/jadwal-saya') }}" class="sidebar-link {{ request()->routeIs('teacher.schedule') ? 'active' : '' }}"><span class="nav-icon">J</span><span>Jadwal Saya</span></a>
             @elseif (auth()->user()->role === 'siswa')
                 <a href="{{ route('student.schedule') }}" class="sidebar-link {{ request()->routeIs('student.schedule') ? 'active' : '' }}"><span class="nav-icon">J</span><span>Jadwal Saya</span></a>
                 <a href="{{ route('student.scan') }}"

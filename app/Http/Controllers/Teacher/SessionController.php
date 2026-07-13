@@ -102,7 +102,7 @@ class SessionController extends Controller
             'manual_override' => ['nullable', 'boolean'],
         ]);
 
-        $manualOverrideEnabled = filter_var(env('ABSENSI_MANUAL_OVERRIDE', false), FILTER_VALIDATE_BOOLEAN);
+        $manualOverrideEnabled = filter_var(config('absensi.manual_override', false), FILTER_VALIDATE_BOOLEAN);
         $manualOverride = $request->boolean('manual_override') && $manualOverrideEnabled;
 
         $schedule = \App\Models\Schedule::with(['subject', 'schoolClass'])
