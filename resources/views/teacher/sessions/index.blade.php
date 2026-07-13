@@ -44,6 +44,7 @@
     }
 
     $hasOpenSession = ($openSession ?? null) && $openSession->isOpen();
+    $manualOverrideEnabled = filter_var(env('ABSENSI_MANUAL_OVERRIDE', false), FILTER_VALIDATE_BOOLEAN);
 @endphp
 
 <section class="teacher-session-hero">
@@ -140,9 +141,10 @@
     <article class="teacher-manual-session-card">
         <span class="section-kicker">BUKA SESI MANUAL</span>
         <h2>Pilih Jadwal Hari Ini</h2>
-        <p>Pilih salah satu jadwal mengajar hari ini untuk membuka sesi absensi secara manual. Sesi tetap hanya dapat dibuka saat jam pelajaran berlangsung.</p>
+        <p>Pilih salah satu jadwal mengajar hari ini untuk membuka sesi absensi secara manual. Pada lokal, sesi manual dapat dipakai untuk uji coba sebelum production.</p>
 
         <form method="POST" action="{{ route('teacher.sessions.store') }}" class="teacher-manual-session-form" id="manual-session-form">
+            <input type="hidden" name="manual_override" value="1">
             @csrf
 
             <label>
@@ -244,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!select || !button || !note) return;
 
     const hasOpenSession = @json($hasOpenSession);
+    const manualOverrideEnabled = @json($manualOverrideEnabled);
 
     function syncManualButton() {
         const option = select.options[select.selectedIndex];
@@ -264,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        if (!canOpen) {
+        if (!canOpen && !manualOverrideEnabled) {
             button.disabled = true;
             note.textContent = 'Jadwal ini belum dimulai atau sudah selesai. Sesi hanya dapat dibuka pada jam pelajaran berlangsung.';
             note.className = 'teacher-manual-session-note warning';
@@ -272,8 +275,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         button.disabled = false;
-        note.textContent = 'Jadwal sedang berlangsung. Sesi absensi dapat dibuka.';
-        note.className = 'teacher-manual-session-note success';
+
+        if (canOpen) {
+            note.textContent = 'Jadwal sedang berlangsung. Sesi absensi dapat dibuka.';
+            note.className = 'teacher-manual-session-note success';
+        } else {
+            note.textContent = 'Mode uji coba lokal aktif. Sesi manual tetap dapat dibuka untuk kebutuhan testing.';
+            note.className = 'teacher-manual-session-note success';
+        }
     }
 
     select.addEventListener('change', syncManualButton);

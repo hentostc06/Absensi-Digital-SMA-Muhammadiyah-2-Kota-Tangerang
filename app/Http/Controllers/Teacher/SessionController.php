@@ -86,6 +86,7 @@ class SessionController extends Controller
     }
 
 
+
     public function store(\Illuminate\Http\Request $request)
     {
         $teacher = $request->user()->teacher;
@@ -98,7 +99,11 @@ class SessionController extends Controller
             'schedule_id' => ['required', 'integer'],
             'late_after_minutes' => ['nullable', 'integer', 'min:1', 'max:120'],
             'session_duration_minutes' => ['nullable', 'integer', 'min:5', 'max:120'],
+            'manual_override' => ['nullable', 'boolean'],
         ]);
+
+        $manualOverrideEnabled = filter_var(env('ABSENSI_MANUAL_OVERRIDE', false), FILTER_VALIDATE_BOOLEAN);
+        $manualOverride = $request->boolean('manual_override') && $manualOverrideEnabled;
 
         $schedule = \App\Models\Schedule::with(['subject', 'schoolClass'])
             ->where('teacher_id', $teacher->id)
@@ -124,16 +129,18 @@ class SessionController extends Controller
         $startAt = \Illuminate\Support\Carbon::parse(now()->toDateString() . ' ' . substr((string) $schedule->start_time, 0, 8));
         $endAt = \Illuminate\Support\Carbon::parse(now()->toDateString() . ' ' . substr((string) $schedule->end_time, 0, 8));
 
-        if (now()->lt($startAt)) {
-            return back()
-                ->withInput()
-                ->withErrors(['schedule_id' => 'Sesi belum bisa dibuka. Jadwal dimulai pukul ' . $startAt->format('H:i') . ' WIB.']);
-        }
+        if (! $manualOverride) {
+            if (now()->lt($startAt)) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['schedule_id' => 'Sesi belum bisa dibuka. Jadwal dimulai pukul ' . $startAt->format('H:i') . ' WIB.']);
+            }
 
-        if (now()->gt($endAt)) {
-            return back()
-                ->withInput()
-                ->withErrors(['schedule_id' => 'Sesi tidak bisa dibuka karena jam pelajaran sudah selesai.']);
+            if (now()->gt($endAt)) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['schedule_id' => 'Sesi tidak bisa dibuka karena jam pelajaran sudah selesai.']);
+            }
         }
 
         $openSession = \App\Models\AttendanceSession::where('teacher_id', $teacher->id)
@@ -176,8 +183,12 @@ class SessionController extends Controller
         $session = \App\Models\AttendanceSession::findOrFail($sessionId);
 
         return redirect()->route('teacher.sessions.show', $session)
-            ->with('success', 'Sesi absensi berhasil dibuka.');
+            ->with('success', $manualOverride
+                ? 'Sesi absensi manual berhasil dibuka untuk uji coba lokal.'
+                : 'Sesi absensi berhasil dibuka.'
+            );
     }
+
 
 
     public function show(AttendanceSession $session)
