@@ -3,22 +3,10 @@
 @section('title', 'Dashboard Guru')
 
 @section('content')
-@php
-    $teacherUser = auth()->user();
-    $teacherGender = strtolower((string) ($teacherUser->gender ?? ''));
-
-    $teacherGreeting = match ($teacherGender) {
-        'laki-laki' => 'Bapak',
-        'perempuan' => 'Ibu',
-        default => 'Bapak/Ibu',
-    };
-@endphp
-
-
 <section class="teacher-welcome-card">
     <div>
         <span class="section-kicker">Dashboard Guru</span>
-        <h1>Selamat datang, {{ $teacherGreeting }} {{ auth()->user()->name }}</h1>
+        <h1>Selamat datang, {{ $teacherTitle }} {{ auth()->user()->name }}</h1>
         <p>{{ $day }}, {{ now()->translatedFormat('d F Y') }}. Sistem otomatis membaca jadwal mengajar berdasarkan hari dan jam sekarang.</p>
     </div>
 

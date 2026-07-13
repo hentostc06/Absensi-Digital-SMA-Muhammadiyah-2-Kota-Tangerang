@@ -8385,3 +8385,58 @@ form input[name="late_after_minutes"] {
     border-color: #f6c344 !important;
     box-shadow: 0 0 0 4px rgba(246, 195, 68, .18) !important;
 }
+
+/* === FIX ADMIN OPERATIONAL MENU CARD COLOR FINAL === */
+
+/* Samakan card Menu Operasional admin, jangan ada yang kuning sendiri */
+main a[href*="/admin/schedules"],
+main a[href*="/admin/reports"],
+main a[href*="/admin/accounts"],
+main a[href*="/admin/students"],
+main a[href*="/admin/teachers"],
+main a[href*="/admin/classes"],
+main a[href*="/admin/subjects"] {
+    background: #ffffff !important;
+    border: 1px solid #dbe5f1 !important;
+    color: #082455 !important;
+    box-shadow: none !important;
+}
+
+/* Pastikan semua teks di card tetap normal */
+main a[href*="/admin/schedules"] *,
+main a[href*="/admin/reports"] *,
+main a[href*="/admin/accounts"] *,
+main a[href*="/admin/students"] *,
+main a[href*="/admin/teachers"] *,
+main a[href*="/admin/classes"] *,
+main a[href*="/admin/subjects"] * {
+    color: inherit !important;
+}
+
+/* Icon boleh tetap kuning kecil, bukan card full kuning */
+main a[href*="/admin/schedules"] > span:first-child,
+main a[href*="/admin/reports"] > span:first-child,
+main a[href*="/admin/accounts"] > span:first-child,
+main a[href*="/admin/students"] > span:first-child,
+main a[href*="/admin/teachers"] > span:first-child,
+main a[href*="/admin/classes"] > span:first-child,
+main a[href*="/admin/subjects"] > span:first-child,
+main a[href*="/admin/schedules"] .icon,
+main a[href*="/admin/reports"] .icon,
+main a[href*="/admin/accounts"] .icon {
+    background: #f6c344 !important;
+    color: #082455 !important;
+}
+
+/* Hover baru kasih aksen lembut */
+main a[href*="/admin/schedules"]:hover,
+main a[href*="/admin/reports"]:hover,
+main a[href*="/admin/accounts"]:hover,
+main a[href*="/admin/students"]:hover,
+main a[href*="/admin/teachers"]:hover,
+main a[href*="/admin/classes"]:hover,
+main a[href*="/admin/subjects"]:hover {
+    background: #fffaf0 !important;
+    border-color: #f6c344 !important;
+    transform: translateY(-1px);
+}

@@ -86,6 +86,7 @@ class AccountController extends Controller
             };
 
             $user = User::create([
+                'gender' => $data['gender'] ?? null,
                 'name' => $data['name'],
                 'username' => $username,
                 'email' => $data['email'] ?? null,
@@ -98,6 +99,7 @@ class AccountController extends Controller
                 Teacher::create([
                     'user_id' => $user->id,
                     'niy_nbm' => filled($data['niy_nbm'] ?? null) ? $data['niy_nbm'] : $this->nextTeacherNumber(),
+                    'gender' => $data['gender'] ?? null,
                     'phone' => $data['phone'] ?? null,
                 ]);
             }
@@ -167,6 +169,7 @@ class AccountController extends Controller
                     ['user_id' => $account->id],
                     [
                         'niy_nbm' => filled($data['niy_nbm'] ?? null) ? $data['niy_nbm'] : ($account->teacher?->niy_nbm ?? $this->nextTeacherNumber()),
+                        'gender' => $data['gender'] ?? null,
                         'phone' => $data['phone'] ?? null,
                     ]
                 );

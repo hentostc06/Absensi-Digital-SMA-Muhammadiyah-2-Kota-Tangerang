@@ -1,5 +1,7 @@
 @extends('layouts.app')
+
 @section('title', 'Kelola Akun')
+
 @section('content')
 <div class="hero-dashboard account-hero">
     <div>
@@ -7,6 +9,7 @@
         <h1>Kelola Akun Pengguna</h1>
         <p>Admin membuat akun untuk Admin, Guru, dan Siswa. Tidak ada registrasi publik agar data tetap aman.</p>
     </div>
+
     <div class="mini-stat-row">
         <span>Admin <b>{{ $totalAdmin }}</b></span>
         <span>Guru <b>{{ $totalGuru }}</b></span>
@@ -21,44 +24,95 @@
 
         <form method="POST" action="{{ route('admin.accounts.store') }}" class="form account-form" data-account-form>
             @csrf
+
             <div class="role-picker">
-                <label class="role-option active" data-role-card="siswa"><input type="radio" name="role" value="siswa" checked><span>S</span><strong>Siswa</strong><small>Pilih kelas, NIS dibuat otomatis</small></label>
-                <label class="role-option" data-role-card="guru"><input type="radio" name="role" value="guru"><span>G</span><strong>Guru</strong><small>Jadwal tampil di dashboard guru</small></label>
-                <label class="role-option" data-role-card="admin"><input type="radio" name="role" value="admin"><span>A</span><strong>Admin</strong><small>Akses penuh sistem</small></label>
+                <label class="role-option active" data-role-card="siswa">
+                    <input type="radio" name="role" value="siswa" checked>
+                    <span>S</span>
+                    <strong>Siswa</strong>
+                    <small>Pilih kelas, NIS dibuat otomatis</small>
+                </label>
+
+                <label class="role-option" data-role-card="guru">
+                    <input type="radio" name="role" value="guru">
+                    <span>G</span>
+                    <strong>Guru</strong>
+                    <small>Jadwal tampil di dashboard guru</small>
+                </label>
+
+                <label class="role-option" data-role-card="admin">
+                    <input type="radio" name="role" value="admin">
+                    <span>A</span>
+                    <strong>Admin</strong>
+                    <small>Akses penuh sistem</small>
+                </label>
             </div>
 
-            <div class="form grid">
-                <label>Nama Lengkap <input name="name" value="{{ old('name') }}" required placeholder="Contoh: Ahmad Fauzan"></label>
-                <label>Username <input name="username" value="{{ old('username') }}" placeholder="Kosongkan untuk otomatis"></label>
-                <label>Email <input type="email" name="email" value="{{ old('email') }}" placeholder="Opsional"></label>
-                <label>Password <input name="password" type="password" placeholder="Kosongkan untuk default otomatis"></label>
+            <div class="form grid account-create-grid">
+                <label>
+                    Nama Lengkap
+                    <input name="name" value="{{ old('name') }}" required placeholder="Contoh: Ahmad Fauzan">
+                </label>
 
-                <div class="role-fields" data-fields-for="siswa">
-                    <label>Kelas Siswa
+                <label>
+                    Username
+                    <input name="username" value="{{ old('username') }}" placeholder="Kosongkan untuk otomatis">
+                </label>
+
+                <label>
+                    Email
+                    <input type="email" name="email" value="{{ old('email') }}" placeholder="Opsional">
+                </label>
+
+                <label>
+                    Password
+                    <input name="password" type="password" placeholder="Kosongkan untuk default otomatis">
+                </label>
+
+                <div class="role-fields account-role-fields" data-fields-for="siswa">
+                    <label>
+                        Kelas Siswa
                         <select name="school_class_id">
                             <option value="">Pilih kelas</option>
                             @foreach ($classes as $class)
-                                <option value="{{ $class->id }}" @selected(old('school_class_id') == $class->id)>{{ $class->name }} - {{ $class->academic_year }}</option>
+                                <option value="{{ $class->id }}" @selected(old('school_class_id') == $class->id)>
+                                    {{ $class->name }} - {{ $class->academic_year }}
+                                </option>
                             @endforeach
                         </select>
                     </label>
+                </div>
 
-                    <label>Jenis Kelamin
-                        <select name="gender">
-                            <option value="">Pilih</option>
-                            <option value="L" @selected(old('gender') === 'L')>Laki-laki</option>
-                            <option value="P" @selected(old('gender') === 'P')>Perempuan</option>
-                        </select>
+                <div class="role-fields account-role-fields hidden" data-fields-for="guru">
+                    <label>
+                        Nomor Induk Guru / NBM
+                        <input name="niy_nbm" value="{{ old('niy_nbm') }}" placeholder="Kosongkan untuk otomatis">
                     </label>
                 </div>
 
-                <div class="role-fields hidden" data-fields-for="guru">
-                    <label>Nomor Induk Guru / NBM <input name="niy_nbm" value="{{ old('niy_nbm') }}" placeholder="Kosongkan untuk otomatis"></label>
-                </div>
+                <label>
+                    Jenis Kelamin
+                    <select name="gender">
+                        <option value="">Pilih jenis kelamin</option>
+                        <option value="L" @selected(old('gender') === 'L')>Laki-laki</option>
+                        <option value="P" @selected(old('gender') === 'P')>Perempuan</option>
+                    </select>
+                </label>
 
-                <label>No. HP <input name="phone" value="{{ old('phone') }}" placeholder="Opsional"></label>
-                <label class="full">Alamat / Catatan <textarea name="address" placeholder="Opsional untuk siswa">{{ old('address') }}</textarea></label>
-                <label class="check full"><input type="checkbox" name="is_active" value="1" checked> Akun langsung aktif</label>
+                <label>
+                    No. HP
+                    <input name="phone" value="{{ old('phone') }}" placeholder="Opsional">
+                </label>
+
+                <label class="full">
+                    Alamat / Catatan
+                    <textarea name="address" placeholder="Opsional untuk siswa">{{ old('address') }}</textarea>
+                </label>
+
+                <label class="check full">
+                    <input type="checkbox" name="is_active" value="1" checked>
+                    Akun langsung aktif
+                </label>
             </div>
 
             <button class="btn primary wide" type="submit">Buat Akun Otomatis</button>
@@ -86,6 +140,7 @@
                 <div class="account-row">
                     <div class="account-main">
                         <div class="account-avatar">{{ strtoupper(substr($account->name, 0, 1)) }}</div>
+
                         <div>
                             <strong>{{ $account->name }}</strong>
                             <span>
@@ -99,22 +154,62 @@
                         </div>
                     </div>
 
-                    <span class="status-chip {{ $account->is_active ? 'active' : 'inactive' }}">{{ $account->is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                    <span class="status-chip {{ $account->is_active ? 'active' : 'inactive' }}">
+                        {{ $account->is_active ? 'Aktif' : 'Nonaktif' }}
+                    </span>
 
                     <div class="account-actions">
                         <a class="btn sm" href="{{ route('admin.accounts.edit', $account) }}">Edit</a>
 
-                        <form method="POST" action="{{ route('admin.accounts.reset-password', $account) }}">@csrf @method('PATCH')<button class="btn sm" type="submit">Reset</button></form>
-                        <form method="POST" action="{{ route('admin.accounts.toggle', $account) }}">@csrf @method('PATCH')<button class="btn sm" type="submit">{{ $account->is_active ? 'Nonaktifkan' : 'Aktifkan' }}</button></form>
-                        <form method="POST" action="{{ route('admin.accounts.destroy', $account) }}" onsubmit="return confirm('Hapus akun ini?')">@csrf @method('DELETE')<button class="btn sm danger" type="submit">Hapus</button></form>
+                        <form method="POST" action="{{ route('admin.accounts.reset-password', $account) }}">
+                            @csrf
+                            @method('PATCH')
+                            <button class="btn sm" type="submit">Reset</button>
+                        </form>
+
+                        <form method="POST" action="{{ route('admin.accounts.toggle', $account) }}">
+                            @csrf
+                            @method('PATCH')
+                            <button class="btn sm" type="submit">{{ $account->is_active ? 'Nonaktifkan' : 'Aktifkan' }}</button>
+                        </form>
+
+                        <form method="POST" action="{{ route('admin.accounts.destroy', $account) }}" onsubmit="return confirm('Hapus akun ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn sm danger" type="submit">Hapus</button>
+                        </form>
                     </div>
                 </div>
             @empty
-                <div class="empty-state"><span>⌁</span><strong>Belum ada akun</strong><p>Buat akun melalui panel di sebelah kiri.</p></div>
+                <div class="empty-state">
+                    <span>⌁</span>
+                    <strong>Belum ada akun</strong>
+                    <p>Buat akun melalui panel di sebelah kiri.</p>
+                </div>
             @endforelse
         </div>
 
         {{ $accounts->links('vendor.pagination.badcoding') }}
     </section>
 </div>
+
+<style>
+    .account-role-fields {
+        display: contents !important;
+    }
+
+    .account-role-fields.hidden {
+        display: none !important;
+    }
+
+    .account-create-grid label {
+        margin: 0 !important;
+    }
+
+    .account-create-grid input,
+    .account-create-grid select,
+    .account-create-grid textarea {
+        margin-top: 7px !important;
+    }
+</style>
 @endsection

@@ -20,3 +20,6 @@ frankenphp-worker.php
 .patch-backups/
 storage/app/backups/
 .claude/
+storage/*.zip
+*.sql
+*.dump

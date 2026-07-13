@@ -18,9 +18,14 @@
         ?? $student->no_hp
         ?? '-';
 
-    $genderLabel = match ($user->gender ?? null) {
-        'laki-laki' => 'Laki-laki',
-        'perempuan' => 'Perempuan',
+    $genderValue = $teacher->gender
+        ?? $student->gender
+        ?? $user->gender
+        ?? null;
+
+    $genderLabel = match ($genderValue) {
+        'L', 'laki-laki' => 'Laki-laki',
+        'P', 'perempuan' => 'Perempuan',
         default => 'Belum diatur',
     };
 @endphp
@@ -96,7 +101,7 @@
         </div>
 
         <div class="account-readonly-note">
-            Jenis kelamin hanya dapat diubah oleh admin melalui data guru atau data siswa.
+            Hubungi admin atau kantor Tata Usaha untuk mengubah data diri Anda pada website ini.
         </div>
     </article>
 

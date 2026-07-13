@@ -13,15 +13,44 @@ use Illuminate\Validation\ValidationException;
 
 class ScheduleController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
+        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+        $teachers = \App\Models\Teacher::with('user')
+            ->get()
+            ->sortBy(fn ($teacher) => $teacher->user->name ?? '')
+            ->values();
+
+        $subjects = \App\Models\Subject::query()
+            ->orderBy('name')
+            ->get();
+
+        $query = \App\Models\Schedule::with(['teacher.user', 'schoolClass', 'subject'])
+            ->when($request->filled('teacher_id'), function ($query) use ($request) {
+                $query->where('teacher_id', $request->integer('teacher_id'));
+            })
+            ->when($request->filled('day'), function ($query) use ($request) {
+                $query->where('day_of_week', $request->input('day'));
+            })
+            ->when($request->filled('subject_id'), function ($query) use ($request) {
+                $query->where('subject_id', $request->integer('subject_id'));
+            })
+            ->orderByRaw("CASE day_of_week WHEN 'Senin' THEN 1 WHEN 'Selasa' THEN 2 WHEN 'Rabu' THEN 3 WHEN 'Kamis' THEN 4 WHEN 'Jumat' THEN 5 WHEN 'Sabtu' THEN 6 ELSE 7 END")
+            ->orderBy('start_time');
+
         return view('admin.schedules.index', [
-            'items' => Schedule::with(['teacher.user', 'schoolClass', 'subject'])
-                ->orderByRaw("CASE day_of_week WHEN 'Senin' THEN 1 WHEN 'Selasa' THEN 2 WHEN 'Rabu' THEN 3 WHEN 'Kamis' THEN 4 WHEN 'Jumat' THEN 5 WHEN 'Sabtu' THEN 6 ELSE 7 END")
-                ->orderBy('start_time')
-                ->paginate(20),
+            'items' => $query->paginate(20)->withQueryString(),
+            'teachers' => $teachers,
+            'subjects' => $subjects,
+            'days' => $days,
+            'selectedTeacherId' => $request->input('teacher_id'),
+            'selectedSubjectId' => $request->input('subject_id'),
+            'selectedDay' => $request->input('day'),
         ]);
     }
+
+
 
     public function create()
     {
